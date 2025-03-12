@@ -13,7 +13,11 @@ class GroupPermission extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['id', 'name', 'description'];
+    protected $fillable = [
+        'id', 
+        'name', 
+        'description'
+    ];
 
     public function permissions()
     {

@@ -11,11 +11,7 @@ class TestController extends Controller
     public function testDatabase()
     {
         try {
-            // Check database connection
-            DB::connection('user_management')->getPdo();
-            
-            // Check if the user_permissions table exists
-            $tableExists = Schema::connection('user_management')->hasTable('user_permissions');
+            $tableExists = Schema::connection('pgsql')->hasTable('user_permissions');
 
             return response()->json([
                 'status' => 'success',

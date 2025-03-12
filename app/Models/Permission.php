@@ -13,7 +13,12 @@ class Permission extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['id', 'group_permission_id', 'name', 'description'];
+    protected $fillable = [
+        'id', 
+        'group_permission_id', 
+        'name', 
+        'description'
+    ];
 
     public function groupPermission()
     {

@@ -1,27 +1,37 @@
 <?php
+// To Be Moved to Calendar Service
 
-namespace App\Models;
+// namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+// use Illuminate\Database\Eloquent\Factories\HasFactory;
+// use Illuminate\Database\Eloquent\Model;
 
-class Notification extends Model
-{
-    use HasFactory;
+// class Notification extends Model
+// {
+//     use HasFactory;
 
-    protected $primaryKey = 'id';
-    public $incrementing = false;
-    protected $keyType = 'string';
+//     protected $primaryKey = 'id';
+//     public $incrementing = false;
+//     protected $keyType = 'string';
 
-    protected $fillable = ['id', 'receiver_id', 'sender_id', 'title', 'content', 'status', 'sent_at', 'type'];
+//     protected $fillable = [
+//         'id', 
+//         'receiver_id', 
+//         'sender_id', 
+//         'title', 
+//         'content', 
+//         'status', 
+//         'sent_at', 
+//         'type'
+//     ];
 
-    public function receiver()
-    {
-        return $this->belongsTo(User::class, 'receiver_id');
-    }
+//     public function receiver()
+//     {
+//         return $this->belongsTo(User::class, 'receiver_id');
+//     }
 
-    public function sender()
-    {
-        return $this->belongsTo(User::class, 'sender_id');
-    }
-}
+//     public function sender()
+//     {
+//         return $this->belongsTo(User::class, 'sender_id');
+//     }
+// }

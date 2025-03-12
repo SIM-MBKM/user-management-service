@@ -13,7 +13,11 @@ class RolePermission extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['id', 'role_id', 'permission_id'];
+    protected $fillable = [
+        'id', 
+        'role_id', 
+        'permission_id'
+    ];
 
     public function role()
     {
