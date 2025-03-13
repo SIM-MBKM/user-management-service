@@ -34,19 +34,9 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
-    
+
     public function role()
     {
         return $this->belongsTo(Role::class, 'role_id');
     }
-
-    // public function receivedNotifications()
-    // {
-    //     return $this->hasMany(Notification::class, 'receiver_id');
-    // }
-
-    // public function sentNotifications()
-    // {
-    //     return $this->hasMany(Notification::class, 'sender_id');
-    // }
 }
