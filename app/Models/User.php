@@ -3,40 +3,68 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Model
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasUuids;
+
+    protected $connection = 'user_management';
+    protected $table = 'users';
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            $model->id = (string) \Illuminate\Support\Str::uuid();
+        });
+    }
 
     protected $primaryKey = 'id';
     public $incrementing = false;
     protected $keyType = 'string';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'id', 
-        'role_id', 
-        'nrp', 
-        'status', 
-        'last_login'
-    ];
-
-    protected $hidden = [
-        'password',
-        'remember_token',
+        'auth_user_id',
+        'role_id',
+        'age',  //external data from auth_service's user
+        'nrp',  //external data from auth_service's user
     ];
 
     public function role()
     {
-        return $this->belongsTo(Role::class, 'role_id');
+        return $this->belongsTo(Role::class);
+    }
+
+    public function directPermissions()
+    {
+        return $this->belongsToMany(Permission::class, 'user_permissions');
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role->name === 'SuperAdmin';
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        return $this->role->permissions()
+            ->where('name', $permission)
+            ->exists() ||
+            $this->directPermissions()
+            ->where('name', $permission)
+            ->exists();
+    }
+
+    public function getAllPermissions(): Collection
+    {
+        return $this->role->permissions->merge($this->directPermissions())->unique('id');
     }
 }

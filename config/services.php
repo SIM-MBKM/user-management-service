@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'auth_service' => [
+        'base_uri' => env('AUTH_SERVICE_URL'),
+        'timeout' => 15,
+    ],
+    'user_management_service' => [
+        'base_uri' => env('USER_MANAGEMENT_URL'),
+        'timeout' => 15,
+    ],
 ];

@@ -2,21 +2,33 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Permission extends Model
 {
-    use HasFactory;
+    use HasUuids;
+
+    protected $connection = 'user_management';
+    protected $table = 'users';
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            $model->id = (string) \Illuminate\Support\Str::uuid();
+        });
+    }
 
     protected $primaryKey = 'id';
     public $incrementing = false;
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id', 
-        'group_permission_id', 
-        'name', 
+        'id',
+        'group_permission_id',
+        'name',
         'description'
     ];
 

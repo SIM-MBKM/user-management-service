@@ -7,18 +7,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class Role extends Model
 {
-    use HasFactory;
+    protected $connection = 'user_management';
+    protected $table = 'roles';
 
     protected $primaryKey = 'id';
     public $incrementing = false;
     protected $keyType = 'string';
 
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            $model->id = (string) \Illuminate\Support\Str::uuid();
+        });
+    }
+
     protected $fillable = [
-        'id', 
-        'name', 
-        'description', 
-        'start_date', 
-        'end_date'
+        'id',
+        'name',
+        'description',
     ];
 
     public function users()
@@ -29,5 +36,10 @@ class Role extends Model
     public function permissions()
     {
         return $this->belongsToMany(Permission::class, 'role_permissions', 'role_id', 'permission_id');
+    }
+
+    public function scopeDefault($query)
+    {
+        return $query->where('name', 'Mahasiswa');
     }
 }
