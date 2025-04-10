@@ -40,7 +40,7 @@ class User extends Model
 
     public function role()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(Role::class, 'role_id');
     }
 
     public function directPermissions()
@@ -50,7 +50,7 @@ class User extends Model
 
     public function isSuperAdmin(): bool
     {
-        return $this->role->name === 'SuperAdmin';
+        return $this->role->name === 'ADMIN';
     }
 
     public function hasPermission(string $permission): bool

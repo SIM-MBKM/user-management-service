@@ -8,8 +8,9 @@ use App\Http\Controllers\TestController;
 //  User's profile related endpoints
 // Route::get('/v1/user/service/test-auth', [UserController::class, 'testAuth']);
 Route::middleware([
-    'auth',
-    'check.permission:user_management_service,read-all,users',
+    // 'auth',
+    // 'access.key',
+    'check.permission:user_management_service,read,users',
 ])->group(function () {
     Route::get('/v1/user/service/users', [UserController::class, 'getAllUsers']);
     Route::get('/v1/user/service/by-user-id/{userId}', [UserController::class, 'getUserById'])->where('userId', '[0-9a-fA-F\-]{36}');

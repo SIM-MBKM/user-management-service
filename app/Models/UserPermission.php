@@ -26,10 +26,13 @@ class User
         'permission_id',
     ];
 
-    public function role()
+    public function user()
     {
-        return $this->belongsTo(Role::class, 'role_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    // many to many relations
+    public function permission()
+    {
+        return $this->belongsTo(Permission::class, 'permission_id');
+    }
 }

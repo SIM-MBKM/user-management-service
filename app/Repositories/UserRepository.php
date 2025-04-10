@@ -20,7 +20,7 @@ class UserRepository
 
     public function getByAuthUserId(string $authUserId): User
     {
-        $user = User::find('auth_user_id', $authUserId);
+        $user = User::where('auth_user_id', $authUserId)->first();
         if (!$user) {
             throw new ModelNotFoundException("User not found: $authUserId");
         }
@@ -37,5 +37,13 @@ class UserRepository
         $user = $this->getByAuthUserId($authUserId);
         $user->update($data);
         return $user->fresh();
+    }
+
+    public function getUserWithPermissionsData(string $userId): User
+    {
+        return User::with([
+            'role.permissions.groupPermission',
+            'directPermissions.groupPermission'
+        ])->where('auth_user_id', $userId)->first();
     }
 }

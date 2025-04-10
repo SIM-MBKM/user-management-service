@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'check.permission' => \App\Middleware\CheckPermission::class,
-            'access.key' => \SIMMBKM\ModService\Middleware\AccessKey::class,
+            // 'access.key' => \SIMMBKM\ModService\Middleware\AccessKey::class,
             'auth' => \SIMMBKM\ModService\Auth::class . '::middleware',
         ]);
     })

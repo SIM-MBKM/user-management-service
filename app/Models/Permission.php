@@ -11,7 +11,7 @@ class Permission extends Model
     use HasUuids;
 
     protected $connection = 'user_management';
-    protected $table = 'users';
+    protected $table = 'permissions';
 
     protected static function boot()
     {
@@ -40,5 +40,10 @@ class Permission extends Model
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'role_permissions', 'permission_id', 'role_id');
+    }
+
+    public function group()
+    {
+        return $this->belongsTo(GroupPermission::class, 'group_permission_id');
     }
 }

@@ -2,12 +2,24 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class GroupPermission extends Model
 {
-    use HasFactory;
+    use HasUuids;
+
+    protected $connection = 'user_management';
+    protected $table = 'group_permissions';
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            $model->id = (string) \Illuminate\Support\Str::uuid();
+        });
+    }
 
     protected $primaryKey = 'id';
     public $incrementing = false;

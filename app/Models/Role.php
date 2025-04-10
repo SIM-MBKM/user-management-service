@@ -40,6 +40,6 @@ class Role extends Model
 
     public function scopeDefault($query)
     {
-        return $query->where('name', 'Mahasiswa');
+        return $query->where('name', 'MAHASISWA');
     }
 }
