@@ -23,20 +23,21 @@ class CheckPermission
 
     public function handle(Request $request, Closure $next, string $groupPermission, string $permission, string $resourceTable): Response
     {
-        //TODO: Temporary fix, change later
-        $token = $request->bearerToken();
-        if (is_null($token)) {
-            return response()->json(['message' => 'Authorization token not found'], 401);
-        }
-        $authServiceResponse = AuthService::validateToken();
+        //TODO: Temporary fix, change later. Current Mod Package doesnt detect self service call
+        // $token = $request->bearerToken();
+        // if (is_null($token)) {
+        //     return response()->json(['message' => 'Authorization token not found'], 401);
+        // }
+        // $authServiceResponse = AuthService::validateToken();
 
-        // Check if the response has an error status
-        if (isset($authServiceResponse->status) && $authServiceResponse->status === 'error') {
-            ServiceException::on($authServiceResponse);
-        }
+        // // Check if the response has an error status
+        // if (isset($authServiceResponse->status) && $authServiceResponse->status === 'error') {
+        //     ServiceException::on($authServiceResponse);
+        // }
 
         // Get the actual user data (either from response->data or response->user)
-        $authUserData = isset($authServiceResponse->data) ? $authServiceResponse->data : $authServiceResponse;
+        // $authUserData = isset($authServiceResponse->data) ? $authServiceResponse->data : $authServiceResponse;
+        $authUserData = Auth::info();
 
         // If we have a user property, use that
         if (isset($authUserData->user)) {
@@ -44,7 +45,7 @@ class CheckPermission
         }
 
         // Log::debug('Auth User Data: ', (array)$authUserData);
-        $user = $this->userService->findUserByAuthUserId($authUserData->data->user_id);
+        $user = $this->userService->findUserByAuthUserId($authUserData->user_id);
         // Log::debug('User Data: ', (array)$user);
 
         if ($user->isSuperAdmin()) {

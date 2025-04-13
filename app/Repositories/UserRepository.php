@@ -27,9 +27,12 @@ class UserRepository
         return $user;
     }
 
-    public function getAllUsers()
+    public function getAllUsers($perPage = 10)
     {
-        return User::with(['role', 'permissions'])->get();
+        return User::with(['role:id,name,description'])
+            ->select('id', 'auth_user_id', 'role_id', 'age', 'nrp', 'created_at', 'updated_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
     }
 
     public function updateUser(string $authUserId, array $data): User

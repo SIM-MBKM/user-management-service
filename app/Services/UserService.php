@@ -6,6 +6,7 @@ use App\Repositories\UserRepository;
 use SIMMBKM\ModService\Exception as ServiceException;
 use App\Services\AuthService;
 use Illuminate\Support\Facades\Log;
+use SIMMBKM\ModService\Auth;
 
 class UserService
 {
@@ -19,20 +20,7 @@ class UserService
     public function getUserById(string $authUserId)
     {
         try {
-            $authServiceResponse = AuthService::getUserDataFromAuthService();
-
-            // Check if the response has an error status
-            if (isset($authServiceResponse->status) && $authServiceResponse->status === 'error') {
-                ServiceException::on($authServiceResponse);
-            }
-
-            // Get the actual user data (either from response->data or response->user)
-            $authUserData = isset($authServiceResponse->data) ? $authServiceResponse->data : $authServiceResponse;
-
-            // If we have a user property, use that
-            if (isset($authUserData->user)) {
-                $authUserData = $authUserData->user;
-            }
+            $authUserData = Auth::info();
 
             $user = $this->userRepository->getUserWithPermissionsData($authUserId);
 
@@ -68,6 +56,25 @@ class UserService
             return $this->userRepository->getByAuthUserId($authUserId);
         } catch (\Exception $e) {
             // Log::error($e->getMessage());
+            return null;
+        }
+    }
+
+    public function getAllUsers()
+    {
+        try {
+            return $this->userRepository->getAllUsers();
+        } catch (\Exception $e) {
+            // Log::error($e->getMessage());
+            return null;
+        }
+    }
+
+    public function updateUserMe(string $authUserId, array $data)
+    {
+        try {
+            return $this->userRepository->updateUser($authUserId, $data);
+        } catch (\Exception $e) {
             return null;
         }
     }
