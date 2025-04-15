@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\DTOs\PermissionDTO;
 use App\Models\Permission;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class PermissionRepository
@@ -33,6 +34,11 @@ class PermissionRepository
         return $permission;
     }
 
+    public function getByIds(array $permissionIds)
+    {
+        return Permission::whereIn('id', $permissionIds)->get();
+    }
+
     public function getAllPermissions()
     {
         return Permission::with('group')->get();
@@ -41,5 +47,36 @@ class PermissionRepository
     public function deletePermission(string $permissionId): void
     {
         Permission::destroy($permissionId);
+    }
+
+    public function getIdsByNames(array $permissionNames)
+    {
+        return Permission::whereIn('name', $permissionNames)->pluck('id')->toArray();
+    }
+
+    public function getIdsByNamesDetailed(array $permissionNames)
+    {
+        return Permission::whereIn('name', $permissionNames)->get();
+    }
+
+    public function getByName(string $permissionName): ?Permission
+    {
+        return Permission::where('name', $permissionName)->first();
+    }
+
+    public function mergeDuplicatePermissions(?Collection $directPermissions, ?Collection $rolePermissions)
+    {
+        // Ensure collections exist and are not null
+        $directPermissions = $directPermissions ?? collect([]);
+        $rolePermissions = $rolePermissions ?? collect([]);
+
+        // Merge and group permissions
+        return $directPermissions->concat($rolePermissions)
+            ->groupBy(function ($permission) {
+                return optional($permission->groupPermission)->name ?? 'unknown';
+            })
+            ->map(function ($groupPermissions) {
+                return $groupPermissions->pluck('name')->unique()->values()->toArray();
+            });
     }
 }

@@ -11,29 +11,22 @@ use SIMMBKM\ModService\Auth;
 class UserService
 {
     protected $userRepository;
+    protected $userPermissionService;
 
-    public function __construct(UserRepository $userRepository)
-    {
+    public function __construct(
+        UserRepository $userRepository,
+        UserPermissionService $userPermissionService
+    ) {
         $this->userRepository = $userRepository;
+        $this->userPermissionService = $userPermissionService;
     }
 
     public function getUserById(string $authUserId)
     {
         try {
             $authUserData = Auth::info();
-
             $user = $this->userRepository->getUserWithPermissionsData($authUserId);
-
-            $allPermissions = $user->role->permissions
-                ->merge($user->directPermissions)
-                ->unique('name');
-
-            $groupedPermissions = $allPermissions->groupBy(function ($permission) {
-                // Use accessor method to avoid undefined property errors
-                return optional($permission->groupPermission)->name ?? 'unknown';
-            })->map(function ($group) {
-                return $group->pluck('name')->unique()->values()->toArray();
-            });
+            $permissionData = $this->userPermissionService->mergedPermissionByUserId($authUserId);
 
             return [
                 'auth_user_id' => $user->auth_user_id,
@@ -43,7 +36,7 @@ class UserService
                 'age' => $user->age,
                 'nrp' => $user->nrp,
                 'role' => $user->role->name,
-                'permissions' => $groupedPermissions
+                'permissions' => $permissionData['permissions'] ?? [],  // Only include the permissions, not the user data
             ];
         } catch (\Exception $e) {
             return null;

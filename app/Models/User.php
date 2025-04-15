@@ -45,7 +45,8 @@ class User extends Model
 
     public function directPermissions()
     {
-        return $this->belongsToMany(Permission::class, 'user_permissions');
+        return $this->belongsToMany(Permission::class, 'user_permissions', 'user_id', 'permission_id')
+            ->using(UserPermission::class);
     }
 
     public function isSuperAdmin(): bool
@@ -63,8 +64,8 @@ class User extends Model
             ->exists();
     }
 
-    public function getAllPermissions(): Collection
-    {
-        return $this->role->permissions->merge($this->directPermissions())->unique('id');
-    }
+    // public function getAllPermissions(): Collection
+    // {
+    //     return $this->role->permissions->merge($this->directPermissions())->unique('id');
+    // }
 }

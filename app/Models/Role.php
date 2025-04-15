@@ -40,6 +40,8 @@ class Role extends Model
 
     public function scopeDefault($query)
     {
-        return $query->where('name', 'MAHASISWA');
+        //TODO: temporary admin, kalau mau prod ganti ke MAHASISWA
+        $defaultRole = env('DEFAULT_ROLE', 'MAHASISWA');
+        return $query->where('name', $defaultRole);
     }
 }

@@ -27,12 +27,24 @@ class UserRepository
         return $user;
     }
 
-    public function getAllUsers($perPage = 10)
+    public function getAllUsers()
     {
-        return User::with(['role:id,name,description'])
-            ->select('id', 'auth_user_id', 'role_id', 'age', 'nrp', 'created_at', 'updated_at')
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+        return User::select('id', 'auth_user_id', 'role_id', 'age', 'nrp', 'created_at', 'updated_at')
+            ->with(['role' => function ($query) {
+                $query->select('id', 'name');
+            }])
+            ->paginate(10)
+            ->through(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'auth_user_id' => $user->auth_user_id,
+                    'age' => $user->age,
+                    'nrp' => $user->nrp,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at,
+                    'role' => $user->role->name ?? null,
+                ];
+            });
     }
 
     public function updateUser(string $authUserId, array $data): User
