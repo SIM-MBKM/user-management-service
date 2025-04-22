@@ -11,7 +11,7 @@ use Exception;
 use Illuminate\Http\Request;
 use SIMMBKM\ModService\Auth;
 
-class UserPermissionController
+class UserPermissionController extends BaseController
 {
     protected $userPermissionService;
     protected $permissionService;
@@ -30,21 +30,12 @@ class UserPermissionController
             $permissions = $this->userPermissionService->getPermissionByUserId($userId);
 
             if (!$permissions) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not found or no permissions assigned'
-                ], 404);
+                return $this->errorResponse('User not found or no permissions assigned', 404);
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $permissions
-            ]);
+            return $this->successResponse($permissions);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -58,21 +49,12 @@ class UserPermissionController
             $permissions = $this->userPermissionService->mergedPermissionByUserId($userId);
 
             if (!$permissions) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not found or no permissions assigned'
-                ], 404);
+                return $this->errorResponse('User not found or no permissions assigned', 404);
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $permissions
-            ]);
+            return $this->successResponse($permissions);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -90,10 +72,7 @@ class UserPermissionController
 
                 $permissionIds = $this->permissionService->getPermissionIdsByNames($request->input('permission_names'));
                 if (empty($permissionIds)) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'No valid permission names provided'
-                    ], 400);
+                    return $this->errorResponse('No valid permission names provided', 400);
                 }
 
                 $result = $this->userPermissionService->assignPermissionsToUser(
@@ -101,25 +80,16 @@ class UserPermissionController
                     $permissionIds
                 );
             } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Permission IDs or names are required'
-                ], 400);
+                return $this->errorResponse('Permission IDs or names are required', 400);
             }
 
             if (!$result) {
                 throw new Exception("Failed to assign permissions");
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Permissions assigned successfully'
-            ], 200);
+            return $this->successResponse(null, 'Permissions assigned successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -137,15 +107,9 @@ class UserPermissionController
                 throw new Exception("Failed to remove permission");
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Permission removed successfully'
-            ], 200);
+            return $this->successResponse(null, 'Permission removed successfully');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -156,20 +120,12 @@ class UserPermissionController
 
             $permissions = $this->userPermissionService->mergedPermissionByUserId($authUserId);
             if (!$permissions) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not found or no permissions assigned'
-                ], 404);
+                return $this->errorResponse('User not found or no permissions assigned', 404);
             }
-            return response()->json([
-                'success' => true,
-                'data' => $permissions
-            ]);
+
+            return $this->successResponse($permissions);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -185,26 +141,12 @@ class UserPermissionController
             );
 
             if (!$permissions) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Permission not found or not assigned on related user'
-                ], 404);
+                return $this->errorResponse('Permission not found or not assigned on related user', 404);
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $permissions
-            ]);
+            return $this->successResponse($permissions);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -219,21 +161,12 @@ class UserPermissionController
             );
 
             if (!$permissions) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Permission not found or not assigned on related user'
-                ], 404);
+                return $this->errorResponse('Permission not found or not assigned on related user', 404);
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $permissions
-            ]);
+            return $this->successResponse($permissions);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 }

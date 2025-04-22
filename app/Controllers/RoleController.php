@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Services\RoleService;
 
-class RoleController
+class RoleController extends BaseController
 {
     protected $roleService;
 
@@ -17,16 +17,9 @@ class RoleController
     {
         try {
             $roles = $this->roleService->getAllRoles();
-
-            return response()->json([
-                'success' => true,
-                'data' => $roles
-            ], 200);
+            return $this->successResponse($roles);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -36,21 +29,12 @@ class RoleController
             $role = $this->roleService->getRoleById($roleId);
 
             if (!$role) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Role not found'
-                ], 404);
+                return $this->errorResponse('Role not found', 404);
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $role
-            ], 200);
+            return $this->successResponse($role);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 }

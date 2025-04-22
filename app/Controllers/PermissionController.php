@@ -7,7 +7,7 @@ use App\DTOs\UserPermissionAssignDTO;
 use App\Services\PermissionService;
 use Illuminate\Http\Request;
 
-class PermissionController
+class PermissionController extends BaseController
 {
     protected $permissionService;
 
@@ -20,16 +20,9 @@ class PermissionController
     {
         try {
             $permissions = $this->permissionService->getAllPermissions();
-
-            return response()->json([
-                'success' => true,
-                'data' => $permissions
-            ], 200);
+            return $this->successResponse($permissions);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -39,21 +32,12 @@ class PermissionController
             $permission = $this->permissionService->getPermissionById($permissionId);
 
             if (!$permission) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Permission not found'
-                ], 404);
+                return $this->errorResponse('Permission not found', 404);
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $permission
-            ], 200);
+            return $this->successResponse($permission);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -68,21 +52,12 @@ class PermissionController
 
             // Check if any permissions were found
             if (!$permissions) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No permissions found'
-                ], 404);
+                return $this->errorResponse('No permissions found', 404);
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $permissions
-            ], 200);
+            return $this->successResponse($permissions);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 }

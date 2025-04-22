@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 use SIMMBKM\ModService\Auth;
 use UserService;
 
-class UserController
+class UserController extends BaseController
 {
     protected $userService;
 
@@ -26,21 +26,12 @@ class UserController
             $userData = $this->userService->getUserById($userId);
 
             if (!$userData) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not found'
-                ], 404);
+                return $this->errorResponse('User not found', 404);
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $userData
-            ], 200);
+            return $this->successResponse($userData);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -48,16 +39,9 @@ class UserController
     {
         try {
             $usersData = $this->userService->getAllUsers();
-
-            return response()->json([
-                'success' => true,
-                'data' => $usersData
-            ], 200);
+            return $this->successResponse($usersData);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -68,21 +52,12 @@ class UserController
             $userData = $this->userService->getUserById($me);
 
             if (!$userData) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not found'
-                ], 404);
+                return $this->errorResponse('User not found', 404);
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $userData
-            ], 200);
+            return $this->successResponse($userData);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -93,10 +68,7 @@ class UserController
             $userData = $this->userService->findUserByAuthUserId($me);
 
             if (!$userData) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not found'
-                ], 404);
+                return $this->errorResponse('User not found', 404);
             }
 
             $mergedData = array_merge([
@@ -122,15 +94,9 @@ class UserController
 
             $updatedData = $this->userService->getUserById($me);
 
-            return response()->json([
-                'success' => true,
-                'data' => $updatedData
-            ], 200);
+            return $this->successResponse($updatedData);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 
@@ -140,10 +106,7 @@ class UserController
             $userData = $this->userService->findUserByAuthUserId($userId);
 
             if (!$userData) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not found'
-                ], 404);
+                return $this->errorResponse('User not found', 404);
             }
 
             $mergedData = array_merge([
@@ -169,15 +132,10 @@ class UserController
 
             $updatedData = $this->userService->getUserById($userId);
 
-            return response()->json([
-                'success' => true,
-                'data' => $updatedData
-            ], 200);
+            return $this->successResponse($updatedData);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ]);
+            // Note: Fixed missing status code in the original controller
+            return $this->errorResponse($e->getMessage(), 500);
         }
     }
 }
