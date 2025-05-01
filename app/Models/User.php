@@ -34,8 +34,8 @@ class User extends Model
     protected $fillable = [
         'auth_user_id',
         'role_id',
-        'age',  //external data from auth_service's user
-        'nrp',  //external data from auth_service's user
+        'age',  //age data
+        'nrp',  //nrp data, can be viewed as NIP if role isn't MAHASISWA (some use cases view this as NIP or null valued)
     ];
 
     public function role()

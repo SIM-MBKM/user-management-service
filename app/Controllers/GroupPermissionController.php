@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Services\GroupPermissionService;
+use Illuminate\Http\Request;
 
 class GroupPermissionController extends BaseController
 {
@@ -13,11 +14,24 @@ class GroupPermissionController extends BaseController
         $this->groupPermissionService = $groupPermissionService;
     }
 
-    public function getAllGroupPermissions()
+    public function getAllGroupPermissions(Request $request)
     {
         try {
-            $groupPermissions = $this->groupPermissionService->getAllGroupPermissions();
-            return $this->successResponse($groupPermissions);
+            $page = (int) $request->get('page', 1);
+            $perPage = (int) $request->get('per_page', 10);
+            $filters = $request->only([
+                'name',
+                'description',
+                'date_from',
+                'date_to'
+            ]);
+
+            $groupPermissions = $this->groupPermissionService->getAllGroupPermissions($filters, $perPage, $page);
+            if ($groupPermissions->isEmpty()) {
+                return $this->errorResponse('No group permissions found', 404);
+            }
+
+            return $this->successResponse($groupPermissions, 'Group Permissions retrieved successfully');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);
         }
@@ -32,7 +46,7 @@ class GroupPermissionController extends BaseController
                 return $this->errorResponse('Group Permission not found', 404);
             }
 
-            return $this->successResponse($groupPermission);
+            return $this->successResponse($groupPermission, 'Group Permission retrieved successfully');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);
         }

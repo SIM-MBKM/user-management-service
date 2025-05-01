@@ -3,7 +3,9 @@
 namespace App\Controllers;
 
 use App\DTOs\UserDTO;
+use App\Models\Role;
 use App\Models\User;
+use App\Services\RoleService;
 use App\Services\UserService as ServicesUserService;
 use Exception;
 use Illuminate\Http\Request;
@@ -14,10 +16,12 @@ use UserService;
 class UserController extends BaseController
 {
     protected $userService;
+    protected $roleService;
 
-    public function __construct(ServicesUserService $userService)
+    public function __construct(ServicesUserService $userService, RoleService $roleService)
     {
         $this->userService = $userService;
+        $this->roleService = $roleService;
     }
 
     public function getUserById($userId)
@@ -35,11 +39,26 @@ class UserController extends BaseController
         }
     }
 
-    public function getAllUsers()
+    public function getAllUsers(Request $request)
     {
         try {
-            $usersData = $this->userService->getAllUsers();
-            return $this->successResponse($usersData);
+            $page = (int) $request->get('page', 1);
+            $perPage = (int) $request->get('per_page', 10);
+            $filters = request()->only([
+                'role_name',
+                'nrp',
+                'min_age',
+                'max_age',
+                'date_from',
+                'date_to',
+            ]);
+
+            $usersData = $this->userService->getPaginatedUsers($filters, $perPage, $page);
+            if ($usersData->isEmpty()) {
+                return $this->errorResponse('No users found', 404);
+            }
+
+            return $this->successResponse($usersData->toArray(), 'Users retrieved successfully');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);
         }

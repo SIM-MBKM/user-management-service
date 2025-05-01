@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Repositories\PermissionRepository;
 use App\Repositories\UserRepository;
+use App\DTOs\UserDetailDTO;
 use Illuminate\Support\Facades\Log;
 
 class UserPermissionService
@@ -22,7 +23,7 @@ class UserPermissionService
     public function getPermissionByUserId(string $userId)
     {
         try {
-            $user = $this->userRepository->getByAuthUserId($userId);
+            $user = $this->userRepository->getUserWithPermissionsData($userId);
 
             if (!$user) {
                 return [
@@ -32,11 +33,23 @@ class UserPermissionService
                 ];
             }
 
-            $userData = $user->only('id', 'auth_user_id', 'role_id', 'age', 'nrp', 'created_at', 'updated_at');
+            // Extract basic user data as an array
+            $userData = [
+                'id' => $user->id,
+                'auth_user_id' => $user->auth_user_id,
+                'role_id' => $user->role_id,
+                'age' => $user->age,
+                'nrp' => $user->nrp,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at
+            ];
+
+            // Get the original model to access relationships directly
+            $userModel = $this->userRepository->getModelForPermissions($userId);
 
             // Get direct and role-based permissions
-            $directPermissions = $user->directPermissions()->get();
-            $rolePermissions = $user->role->permissions ?? collect([]);
+            $directPermissions = $userModel->directPermissions()->get();
+            $rolePermissions = $userModel->role->permissions ?? collect([]);
 
             // Comprehensive permission mapping
             $permissionsMap = [
@@ -97,7 +110,7 @@ class UserPermissionService
 
             return [
                 'user' => $userData,
-                'role' => $user->role->name ?? null,
+                'role' => $user->role_name ?? null,
                 'summary' => [
                     'total_permissions' => count($directPermissions) + count($rolePermissions),
                     'direct_permissions_count' => $directPermissions->count(),
@@ -107,10 +120,10 @@ class UserPermissionService
                 'permissions' => $permissionsMap,
             ];
         } catch (\Exception $e) {
-            // Log::error('Error getting user permissions: ' . $e->getMessage(), [
-            //     'user_id' => $userId,
-            //     'trace' => $e->getTraceAsString()
-            // ]);
+            Log::error('Error getting user permissions: ' . $e->getMessage(), [
+                'user_id' => $userId,
+                'trace' => $e->getTraceAsString()
+            ]);
             return null;
         }
     }
@@ -118,17 +131,29 @@ class UserPermissionService
     public function mergedPermissionByUserId(string $userId)
     {
         try {
-            $user = $this->userRepository->getByAuthUserId($userId);
+            $user = $this->userRepository->getUserWithPermissionsData($userId);
 
             if (!$user) {
                 return null;
             }
 
-            $userData = $user->only('id', 'auth_user_id', 'role_id', 'age', 'nrp', 'created_at', 'updated_at');
+            // Extract basic user data as an array
+            $userData = [
+                'id' => $user->id,
+                'auth_user_id' => $user->auth_user_id,
+                'role_id' => $user->role_id,
+                'age' => $user->age,
+                'nrp' => $user->nrp,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at
+            ];
+
+            // Get the original model to access relationships directly
+            $userModel = $this->userRepository->getModelForPermissions($userId);
 
             // Get direct and role-based permissions
-            $directPermissions = $user->directPermissions()->get();
-            $rolePermissions = $user->role->permissions ?? collect([]);
+            $directPermissions = $userModel->directPermissions()->get();
+            $rolePermissions = $userModel->role->permissions ?? collect([]);
 
             // Merge duplicate permissions
             return [
@@ -136,10 +161,10 @@ class UserPermissionService
                 'permissions' => $this->permissionRepository->mergeDuplicatePermissions($directPermissions, $rolePermissions)
             ];
         } catch (\Exception $e) {
-            // Log::error('Error merging permissions: ' . $e->getMessage(), [
-            //     'user_id' => $userId,
-            //     'trace' => $e->getTraceAsString()
-            // ]);
+            Log::error('Error merging permissions: ' . $e->getMessage(), [
+                'user_id' => $userId,
+                'trace' => $e->getTraceAsString()
+            ]);
             return null;
         }
     }
@@ -154,7 +179,8 @@ class UserPermissionService
     public function assignPermissionsToUser(string $userId, array $permissionIds)
     {
         try {
-            $user = $this->userRepository->getByAuthUserId($userId);
+            // Use a new method that returns the model for manipulation
+            $user = $this->userRepository->getModelForPermissions($userId);
 
             if (!$user) {
                 return false;
@@ -177,7 +203,8 @@ class UserPermissionService
     public function removePermissionFromUser(string $userId, string $permissionId)
     {
         try {
-            $user = $this->userRepository->getByAuthUserId($userId);
+            // Use a new method that returns the model for manipulation
+            $user = $this->userRepository->getModelForPermissions($userId);
 
             if (!$user) {
                 return false;
@@ -201,7 +228,7 @@ class UserPermissionService
     public function checkPermissionsByUserId(string $userId, string $permissionName)
     {
         try {
-            $user = $this->userRepository->getByAuthUserId($userId);
+            $user = $this->userRepository->getUserWithPermissionsData($userId);
 
             if (!$user) {
                 return false;

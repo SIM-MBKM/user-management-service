@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\DTOs\PaginationDTO;
 use App\Repositories\GroupPermissionRepository;
 
 class GroupPermissionService
@@ -13,10 +14,10 @@ class GroupPermissionService
         $this->groupPermissionRepository = $groupPermissionRepository;
     }
 
-    public function getAllGroupPermissions()
+    public function getAllGroupPermissions(array $filters = [], int $perPage = 10, int $page = 1): ?PaginationDTO
     {
         try {
-            return $this->groupPermissionRepository->getAllGroupPermissions();
+            return $this->groupPermissionRepository->getPaginatedGroupPermissions($filters, $perPage, $page);
         } catch (\Exception $e) {
             return null;
         }

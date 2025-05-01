@@ -2,63 +2,166 @@
 
 namespace App\Repositories;
 
+use App\DTOs\PaginationDTO;
+use App\DTOs\UserDetailDTO;
 use App\DTOs\UserDTO;
+use App\DTOs\UserListItemDTO;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class UserRepository
 {
-    public function updateOrCreateFromDto(UserDTO $dto): User
+    protected $model;
+
+    public function __construct(User $model)
     {
-        return User::updateOrCreate([
+        $this->model = $model;
+    }
+
+    public function getModelForPermissions(string $authUserId): User
+    {
+        $user = User::with([
+            'role.permissions.groupPermission',
+            'directPermissions.groupPermission'
+        ])->where('auth_user_id', $authUserId)->first();
+
+        if (!$user) {
+            throw new ModelNotFoundException("User not found: $authUserId");
+        }
+
+        return $user;
+    }
+
+    public function updateOrCreateFromDto(UserDTO $dto): UserDetailDTO
+    {
+        $user = User::updateOrCreate([
             'auth_user_id' => $dto->auth_user_id,
             'role_id' => $dto->role_id,
             'age' => $dto->age,
             'nrp' => $dto->nrp
         ]);
+
+        $user->load('role');
+
+        return UserDetailDTO::fromModel($user);
     }
 
-    public function getByAuthUserId(string $authUserId): User
+    public function getByAuthUserId(string $authUserId): UserDetailDTO
+    {
+        $user = User::with('role')->where('auth_user_id', $authUserId)->first();
+        if (!$user) {
+            throw new ModelNotFoundException("User not found: $authUserId");
+        }
+
+        return UserDetailDTO::fromModel($user);
+    }
+
+    public function getByEmail(string $email): UserDetailDTO
+    {
+        $user = User::with('role')->where('email', $email)->first();
+        if (!$user) {
+            throw new ModelNotFoundException("User not found: $email");
+        }
+
+        return UserDetailDTO::fromModel($user);
+    }
+
+    public function getAllUsers(array $filters = []): Collection
+    {
+        $query = $this->model->newQuery();
+        $this->applyFilters($query, $filters);
+
+        $users = $query->select('id', 'auth_user_id', 'role_id', 'age', 'nrp', 'created_at')
+            ->with(['role' => function ($query) {
+                $query->select('id', 'name');
+            }])
+            ->get();
+
+        return $users->map(function ($user) {
+            return UserListItemDTO::fromModel($user);
+        });
+    }
+
+    public function getPaginatedUsers(array $filters = [], int $perPage = 10, int $page = 1): PaginationDTO
+    {
+        $query = $this->model->newQuery();
+        $this->applyFilters($query, $filters);
+
+        $paginator = $query->select('id', 'auth_user_id', 'role_id', 'age', 'nrp', 'created_at')
+            ->with(['role' => function ($query) {
+                $query->select('id', 'name');
+            }])
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        // Transform the data in the paginator
+        $transformedData = $paginator->getCollection()->map(function ($user) {
+            return UserListItemDTO::fromModel($user);
+        })->all();
+        // dd($transformedData);
+        $dtoPaginator = PaginationDTO::fromPaginator($paginator, $transformedData, request());
+
+        return $dtoPaginator;
+    }
+
+    public function updateUser(string $authUserId, array $data): UserDetailDTO
     {
         $user = User::where('auth_user_id', $authUserId)->first();
         if (!$user) {
             throw new ModelNotFoundException("User not found: $authUserId");
         }
-        return $user;
-    }
 
-    public function getAllUsers()
-    {
-        return User::select('id', 'auth_user_id', 'role_id', 'age', 'nrp', 'created_at', 'updated_at')
-            ->with(['role' => function ($query) {
-                $query->select('id', 'name');
-            }])
-            ->paginate(10)
-            ->through(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'auth_user_id' => $user->auth_user_id,
-                    'age' => $user->age,
-                    'nrp' => $user->nrp,
-                    'created_at' => $user->created_at,
-                    'updated_at' => $user->updated_at,
-                    'role' => $user->role->name ?? null,
-                ];
-            });
-    }
-
-    public function updateUser(string $authUserId, array $data): User
-    {
-        $user = $this->getByAuthUserId($authUserId);
         $user->update($data);
-        return $user->fresh();
+        $user->load('role');
+
+        return UserDetailDTO::fromModel($user->fresh());
     }
 
-    public function getUserWithPermissionsData(string $userId): User
+    public function getUserWithPermissionsData(string $userId): UserDetailDTO
     {
-        return User::with([
+        $user = User::with([
             'role.permissions.groupPermission',
             'directPermissions.groupPermission'
         ])->where('auth_user_id', $userId)->first();
+
+        if (!$user) {
+            throw new ModelNotFoundException("User not found: $userId");
+        }
+
+        return UserDetailDTO::fromModel($user);
+    }
+
+    protected function applyFilters($query, array $filters): void
+    {
+        // Filter by role_id
+        if (isset($filters['role_name'])) {
+            $query->whereHas('role', function ($q) use ($filters) {
+                $q->where('name', 'LIKE', '%' . $filters['role_name'] . '%');
+            });
+        }
+
+        // Filter by nrp (partial match)
+        if (isset($filters['nrp'])) {
+            $query->where('nrp', 'LIKE', '%' . $filters['nrp'] . '%');
+        }
+
+        // Filter by age range
+        if (isset($filters['min_age'])) {
+            $query->where('age', '>=', $filters['min_age']);
+        }
+
+        if (isset($filters['max_age'])) {
+            $query->where('age', '<=', $filters['max_age']);
+        }
+
+        // Filter by created date range
+        if (isset($filters['date_from'])) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
+        }
+
+        if (isset($filters['date_to'])) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
+        }
     }
 }

@@ -8,7 +8,8 @@ class GroupPermissionDTO
 {
     public function __construct(
         public readonly string $name,
-        public readonly string $description
+        public readonly string $description,
+        public readonly ?array $permission_ids = []
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -22,5 +23,13 @@ class GroupPermissionDTO
             name: $validated['name'],
             description: $validated['description']
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'description' => $this->description
+        ];
     }
 }

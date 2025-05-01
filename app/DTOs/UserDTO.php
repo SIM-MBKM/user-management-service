@@ -49,4 +49,14 @@ class UserDTO
             nrp: $validated['nrp'] ?? null,
         );
     }
+
+    public function toArray(): array
+    {
+        return [
+            'auth_user_id' => $this->auth_user_id,
+            'role_id' => $this->role_id,
+            'age' => $this->age,
+            'nrp' => $this->nrp,
+        ];
+    }
 }

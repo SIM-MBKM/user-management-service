@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\DTOs\PaginationDTO;
 use App\Repositories\PermissionRepository;
 use Illuminate\Support\Facades\Log;
 
@@ -14,10 +15,10 @@ class PermissionService
         $this->permissionRepository = $permissionRepository;
     }
 
-    public function getAllPermissions()
+    public function getAllPermissions(array $filters = [], int $perPage = 10, int $page = 1): ?PaginationDTO
     {
         try {
-            return $this->permissionRepository->getAllPermissions();
+            return $this->permissionRepository->getPaginatedPermissions($filters, $perPage, $page);
         } catch (\Exception $e) {
             Log::error('Error getting all permissions: ' . $e->getMessage());
             return null;

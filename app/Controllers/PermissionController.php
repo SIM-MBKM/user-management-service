@@ -16,11 +16,26 @@ class PermissionController extends BaseController
         $this->permissionService = $permissionService;
     }
 
-    public function getAllPermissions()
+    public function getAllPermissions(Request $request)
     {
         try {
-            $permissions = $this->permissionService->getAllPermissions();
-            return $this->successResponse($permissions);
+            $page = (int) $request->get('page', 1);
+            $perPage = (int) $request->get('per_page', 10);
+            $filters = request()->only([
+                'name',
+                'description',
+                'group_name',
+                'group_permission_id',
+                'date_from',
+                'date_to',
+            ]);
+
+            $permissions = $this->permissionService->getAllPermissions($filters, $perPage, $page);
+            if ($permissions->isEmpty()) {
+                return $this->errorResponse('No permissions found', 404);
+            }
+
+            return $this->successResponse($permissions->toArray(), 'Permissions retrieved successfully');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);
         }

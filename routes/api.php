@@ -77,7 +77,7 @@ Route::middleware([
     Route::get('/v1/user/service/permissions', [PermissionController::class, 'getAllPermissions']);
     Route::get('/v1/user/service/permissions/{permissionId}', [PermissionController::class, 'getPermissionById'])
         ->where('permissionId', '[0-9a-fA-F\-]{36}');
-    Route::get('/v1/user/service/permissions', [PermissionController::class, 'getPermissionByNames']);
+    Route::get('/v1/user/service/permissions/names', [PermissionController::class, 'getPermissionByNames']);
 });
 
 /**

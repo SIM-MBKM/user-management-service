@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\DTOs\PaginationDTO;
+use App\DTOs\UserDTO;
 use App\Repositories\UserRepository;
 use SIMMBKM\ModService\Exception as ServiceException;
 use App\Services\AuthService;
@@ -35,7 +37,7 @@ class UserService
                 'email' => $authUserData->email ?? null,
                 'age' => $user->age,
                 'nrp' => $user->nrp,
-                'role' => $user->role->name,
+                'role' => $user->role_name,
                 'permissions' => $permissionData['permissions'] ?? [],  // Only include the permissions, not the user data
             ];
         } catch (\Exception $e) {
@@ -53,12 +55,24 @@ class UserService
         }
     }
 
-    public function getAllUsers()
+    public function getAllUsers(array $filters = [], int $perPage = 10)
     {
         try {
-            return $this->userRepository->getAllUsers();
+            return $this->userRepository->getAllUsers($filters, $perPage);
         } catch (\Exception $e) {
             // Log::error($e->getMessage());
+            return null;
+        }
+    }
+
+    public function getPaginatedUsers(array $filters = [], int $perPage = 10, int $page = 1): ?PaginationDTO
+    {
+        try {
+            return $this->userRepository->getPaginatedUsers($filters, $perPage, $page);
+        } catch (\Exception $e) {
+            Log::error('Error fetching all users: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
             return null;
         }
     }
