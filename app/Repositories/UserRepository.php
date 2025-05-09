@@ -39,7 +39,7 @@ class UserRepository
         $user = User::updateOrCreate([
             'auth_user_id' => $dto->auth_user_id,
             'role_id' => $dto->role_id,
-            'age' => $dto->age,
+            'email' => $dto->email,
             'nrp' => $dto->nrp
         ]);
 
@@ -73,7 +73,7 @@ class UserRepository
         $query = $this->model->newQuery();
         $this->applyFilters($query, $filters);
 
-        $users = $query->select('id', 'auth_user_id', 'role_id', 'age', 'nrp', 'created_at')
+        $users = $query->select('id', 'auth_user_id', 'role_id', 'email', 'nrp', 'created_at')
             ->with(['role' => function ($query) {
                 $query->select('id', 'name');
             }])
@@ -89,7 +89,7 @@ class UserRepository
         $query = $this->model->newQuery();
         $this->applyFilters($query, $filters);
 
-        $paginator = $query->select('id', 'auth_user_id', 'role_id', 'age', 'nrp', 'created_at')
+        $paginator = $query->select('id', 'auth_user_id', 'role_id', 'email', 'nrp', 'created_at')
             ->with(['role' => function ($query) {
                 $query->select('id', 'name');
             }])
@@ -144,15 +144,6 @@ class UserRepository
         // Filter by nrp (partial match)
         if (isset($filters['nrp'])) {
             $query->where('nrp', 'LIKE', '%' . $filters['nrp'] . '%');
-        }
-
-        // Filter by age range
-        if (isset($filters['min_age'])) {
-            $query->where('age', '>=', $filters['min_age']);
-        }
-
-        if (isset($filters['max_age'])) {
-            $query->where('age', '<=', $filters['max_age']);
         }
 
         // Filter by created date range

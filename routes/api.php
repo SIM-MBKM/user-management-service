@@ -22,6 +22,8 @@ Route::middleware([
     Route::get('/v1/user/service/users', [UserController::class, 'getAllUsers']);
     Route::get('/v1/user/service/by-user-id/{userId}', [UserController::class, 'getUserById'])
         ->where('userId', '[0-9a-fA-F\-]{36}');
+    Route::get('/v1/user/service/by-email/{email}', [UserController::class, 'getUserByEmail'])
+        ->where('email', '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}');
 });
 
 // Current user profile operations (self)

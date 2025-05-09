@@ -12,8 +12,8 @@ class UserDTO
     public function __construct(
         public readonly string $auth_user_id,
         public readonly string $role_id,
-        public readonly ?int $age,
-        public readonly ?string $nrp
+        public readonly ?string $nrp,
+        public readonly string $email,
     ) {}
 
     public static function fromRequest(Request $request): self
@@ -21,15 +21,15 @@ class UserDTO
         $validated = $request->validate([
             'auth_user_id' => 'required|uuid',
             'role_id' => 'sometimes|uuid|exists:roles,id',
-            'age' => 'nullable|integer|min:0|max:120',
             'nrp' => 'nullable|string|max:20',
+            'email' => 'required|email:rfc,dns|max:255',
         ]);
 
         return new self(
             auth_user_id: $validated['auth_user_id'],
             role_id: $validated['role_id'] ?? Role::default()->first()->id,
-            age: $validated['age'] ?? null,
             nrp: $validated['nrp'] ?? null,
+            email: $validated['email'],
         );
     }
 
@@ -38,15 +38,26 @@ class UserDTO
         $validated = Validator::make($data, [
             'auth_user_id' => 'required|uuid',
             'role_id' => 'sometimes|uuid|exists:roles,id',
-            'age' => 'nullable|integer|min:0|max:120',
-            'nrp' => 'nullable|string|max:20',
+            'email' => 'required|email:rfc|max:255',
         ])->validate();
+
+        $nrp = null;
+
+        if (isset($data['email'])) {
+            $emailParts = explode('@', $data['email']);
+            $domain = $emailParts[1] ?? '';
+
+            // Specify domain here
+            if ($domain === 'student.its.ac.id' || $domain === 'its.ac.id') {
+                $nrp = $emailParts[0];
+            }
+        }
 
         return new self(
             auth_user_id: $validated['auth_user_id'],
             role_id: $validated['role_id'] ?? Role::default()->first()->id,
-            age: $validated['age'] ?? null,
-            nrp: $validated['nrp'] ?? null,
+            nrp: $nrp,
+            email: $validated['email'],
         );
     }
 
@@ -55,8 +66,8 @@ class UserDTO
         return [
             'auth_user_id' => $this->auth_user_id,
             'role_id' => $this->role_id,
-            'age' => $this->age,
             'nrp' => $this->nrp,
+            'email' => $this->email,
         ];
     }
 }

@@ -39,6 +39,53 @@ class UserController extends BaseController
         }
     }
 
+    public function getUserByEmail($email)
+    {
+        try {
+            $decodedEmail = urldecode($email);
+            if ($decodedEmail === false) {
+                return $this->errorResponse('Invalid email format', 400);
+            }
+
+            validator(
+                ['email' => $decodedEmail],
+                [
+                    'email' => 'required',
+                    'email:rfc,dns,spoof',
+                    'max:255',
+                    function ($attriute, $value, $fail) {
+                        if (preg_match('/\p{Cyrillic}|\p{Greek}|\p{Arabic}/u', $value)) {
+                            $fail('The email contains potentially misleading characters.');
+                        }
+
+                        if (preg_match('/[А-Яа-я].*@.*\.com$/u', $value)) { // Cyrillic characters with .com
+                            $fail('The email contains suspicious character combinations.');
+                        }
+                    }
+                ],
+            )->validate();
+
+            $sanitizedEmail = filter_var($decodedEmail, FILTER_SANITIZE_EMAIL);
+            if ($decodedEmail !== $sanitizedEmail) {
+                return $this->errorResponse('Invalid email format', 400);
+            }
+
+            if (!in_array(explode('@', $decodedEmail)[1], ['its.ac.id', 'student.its.ac.id',  'gmail.com'])) {
+                return $this->errorResponse('Invalid email domain', 400);
+            }
+
+            $userData = $this->userService->getUserByEmail($email);
+
+            if (!$userData) {
+                return $this->errorResponse('User not found', 404);
+            }
+
+            return $this->successResponse($userData->toArray(), 'User retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
+    }
+
     public function getAllUsers(Request $request)
     {
         try {
@@ -47,8 +94,6 @@ class UserController extends BaseController
             $filters = request()->only([
                 'role_name',
                 'nrp',
-                'min_age',
-                'max_age',
                 'date_from',
                 'date_to',
             ]);
@@ -93,15 +138,14 @@ class UserController extends BaseController
             $mergedData = array_merge([
                 'auth_user_id' => $me,
                 'role_id' => $userData->role_id,
-                'age' => $userData->age,
                 'nrp' => $userData->nrp,
+                'email' => $userData->email,
             ], request()->all());
 
             $dtoRequest = new Request($mergedData);
             $dto = UserDTO::fromRequest($dtoRequest);
 
             $updateData = [
-                'age' => $dto->age,
                 'nrp' => $dto->nrp
             ];
 
@@ -131,7 +175,7 @@ class UserController extends BaseController
             $mergedData = array_merge([
                 'auth_user_id' => $userId,
                 'role_id' => $userData->role_id,
-                'age' => $userData->age,
+                'email' => $userData->email,
                 'nrp' => $userData->nrp,
             ], request()->all());
 
@@ -139,7 +183,6 @@ class UserController extends BaseController
             $dto = UserDTO::fromRequest($dtoRequest);
 
             $updateData = [
-                'age' => $dto->age,
                 'nrp' => $dto->nrp
             ];
 

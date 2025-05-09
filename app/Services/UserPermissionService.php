@@ -38,7 +38,7 @@ class UserPermissionService
                 'id' => $user->id,
                 'auth_user_id' => $user->auth_user_id,
                 'role_id' => $user->role_id,
-                'age' => $user->age,
+                'email' => $user->email,
                 'nrp' => $user->nrp,
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at
@@ -142,7 +142,7 @@ class UserPermissionService
                 'id' => $user->id,
                 'auth_user_id' => $user->auth_user_id,
                 'role_id' => $user->role_id,
-                'age' => $user->age,
+                'email' => $user->email,
                 'nrp' => $user->nrp,
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at

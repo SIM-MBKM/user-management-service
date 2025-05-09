@@ -7,11 +7,11 @@ class UserDetailDTO
     public string $id;
     public string $auth_user_id;
     public string $role_id;
-    public ?int $age;
+    public string $email;
     public ?string $nrp;
     public string $created_at;
     public string $updated_at;
-    public ?string $role_name;
+    public string $role_name;
     public array $permissions = [];
 
     public static function fromModel($user): self
@@ -20,11 +20,11 @@ class UserDetailDTO
         $dto->id = $user->id;
         $dto->auth_user_id = $user->auth_user_id;
         $dto->role_id = $user->role_id;
-        $dto->age = $user->age;
+        $dto->email = $user->email;
         $dto->nrp = $user->nrp;
         $dto->created_at = $user->created_at->format('Y-m-d H:i:s');
         $dto->updated_at = $user->updated_at->format('Y-m-d H:i:s');
-        $dto->role_name = $user->role->name ?? null;
+        $dto->role_name = $user->role->name;
 
         // If permissions were loaded, add them to the DTO
         if ($user->relationLoaded('role') && $user->role->relationLoaded('permissions')) {
@@ -50,7 +50,7 @@ class UserDetailDTO
             'id' => $this->id,
             'auth_user_id' => $this->auth_user_id,
             'role_id' => $this->role_id,
-            'age' => $this->age,
+            'email' => $this->email,
             'nrp' => $this->nrp,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

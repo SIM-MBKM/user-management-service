@@ -33,14 +33,22 @@ class UserService
             return [
                 'auth_user_id' => $user->auth_user_id,
                 'name' => $authUserData->name ?? null,
-                'no_wa' => $authUserData->no_wa ?? null,
-                'email' => $authUserData->email ?? null,
-                'age' => $user->age,
+                'email' => $user->email,
                 'nrp' => $user->nrp,
                 'role' => $user->role_name,
                 'permissions' => $permissionData['permissions'] ?? [],  // Only include the permissions, not the user data
             ];
         } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    public function getUserByEmail(string $email)
+    {
+        try {
+            return $this->userRepository->getByEmail($email);
+        } catch (\Exception $e) {
+            // Log::error($e->getMessage());
             return null;
         }
     }
