@@ -70,7 +70,7 @@ class UserController extends BaseController
                 return $this->errorResponse('Invalid email format', 400);
             }
 
-            if (!in_array(explode('@', $decodedEmail)[1], ['its.ac.id', 'student.its.ac.id',  'gmail.com'])) {
+            if (!in_array(explode('@', $decodedEmail)[1], config('emaildomain.allowed'))) {
                 return $this->errorResponse('Invalid email domain', 400);
             }
 
