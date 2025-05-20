@@ -94,6 +94,9 @@ class UserController extends BaseController
             $filters = request()->only([
                 'role_name',
                 'nrp',
+                'email',
+                'user_nrp',
+                'user_email',
                 'date_from',
                 'date_to',
             ]);
