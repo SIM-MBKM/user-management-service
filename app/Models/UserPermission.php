@@ -7,12 +7,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class UserPermission extends Pivot
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $connection = 'user_management';
     protected $table = 'user_permissions';

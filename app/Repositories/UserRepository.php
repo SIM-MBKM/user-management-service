@@ -146,6 +146,22 @@ class UserRepository
             $query->where('nrp', 'LIKE', '%' . $filters['nrp'] . '%');
         }
 
+        // Filter by email
+        if (isset($filters['email'])) {
+            $query->where('email', 'LIKE', '%' . $filters['email'] . '%');
+        }
+
+        // REQUEST DIMAS
+        // Filter by nrp (partial match)
+        if (isset($filters['user_nrp'])) {
+            $query->where('nrp', 'LIKE', '%' . $filters['user_nrp'] . '%');
+        }
+
+        // Filter by email
+        if (isset($filters['user_email'])) {
+            $query->where('email', 'LIKE', '%' . $filters['user_email'] . '%');
+        }
+
         // Filter by created date range
         if (isset($filters['date_from'])) {
             $query->whereDate('created_at', '>=', $filters['date_from']);

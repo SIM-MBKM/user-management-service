@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class GroupPermission extends Model
 {
-    use HasUuids;
+    use HasUuids, SoftDeletes;
 
     protected $connection = 'user_management';
     protected $table = 'group_permissions';
@@ -26,8 +27,8 @@ class GroupPermission extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id', 
-        'name', 
+        'id',
+        'name',
         'description'
     ];
 
