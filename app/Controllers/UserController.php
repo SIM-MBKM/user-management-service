@@ -89,26 +89,68 @@ class UserController extends BaseController
     public function getAllUsers(Request $request)
     {
         try {
-            $page = (int) $request->get('page', 1);
-            $perPage = (int) $request->get('per_page', 10);
-            $filters = request()->only([
-                'role_name',
-                'nrp',
-                'email',
-                'user_nrp',
-                'user_email',
-                'date_from',
-                'date_to',
-            ]);
+            // Support both GET (query params) and POST (request body)
+            if ($request->isMethod('GET')) {
+                // GET request - use query parameters
+                $page = (int) $request->get('page', 1);
+                $perPage = (int) $request->get('per_page', 10);
+                $filters = $request->only([
+                    'role_name',
+                    'nrp',
+                    'email',
+                    'user_nrp',
+                    'user_email',
+                    'date_from',
+                    'date_to',
+                ]);
+            } else {
+                // POST request - validate and use request body
+                $validatedData = $request->validate([
+                    'page' => 'sometimes|integer|min:1',
+                    'per_page' => 'sometimes|integer|min:1|max:100',
+                    'role_name' => 'sometimes|string|max:255',
+                    'nrp' => 'sometimes|string|max:255',
+                    'email' => 'sometimes|email|max:255',
+                    'user_nrp' => 'sometimes|string|max:255',
+                    'user_email' => 'sometimes|email|max:255',
+                    'date_from' => 'sometimes|date',
+                    'date_to' => 'sometimes|date|after_or_equal:date_from',
+                ]);
+
+                $page = (int) ($validatedData['page'] ?? 1);
+                $perPage = (int) ($validatedData['per_page'] ?? 10);
+                
+                // Extract filters from validated data
+                $filters = array_intersect_key($validatedData, array_flip([
+                    'role_name',
+                    'nrp',
+                    'email',
+                    'user_nrp',
+                    'user_email',
+                    'date_from',
+                    'date_to',
+                ]));
+            }
 
             $usersData = $this->userService->getPaginatedUsers($filters, $perPage, $page);
+            
             if ($usersData->isEmpty()) {
                 return $this->errorResponse('No users found', 404);
             }
 
             return $this->successResponse($usersData->toArray(), 'Users retrieved successfully');
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return $this->errorResponse('Validation failed', 422, $e->errors());
+            
         } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), 500);
+            Log::error('Get all users failed: ' . $e->getMessage(), [
+                'method' => $request->method(),
+                'request_data' => $request->all(),
+                'error' => $e
+            ]);
+            
+            return $this->errorResponse('Failed to retrieve users', 500);
         }
     }
 

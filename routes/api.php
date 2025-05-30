@@ -20,6 +20,7 @@ Route::middleware([
     'check.permission:user_management_service,read-all,users'
 ])->group(function () {
     Route::get('/v1/user/service/users', [UserController::class, 'getAllUsers']);
+    Route::post('/v1/user/service/users-all', [UserController::class, 'getAllUsers']);
     Route::get('/v1/user/service/by-user-id/{userId}', [UserController::class, 'getUserById'])
         ->where('userId', '[0-9a-fA-F\-]{36}');
     Route::get('/v1/user/service/by-email/{email}', [UserController::class, 'getUserByEmail'])
