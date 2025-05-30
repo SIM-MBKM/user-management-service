@@ -1,0 +1,42 @@
+services:
+
+  app: 
+    hostname: app
+    container_name: user-service
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - ${LARAVEL_PORT:-8000}:8000
+    restart: always
+    volumes:
+      - ./storage:/app/storage
+      - ./bootstrap/cache:/app/bootstrap/cache
+    networks:
+      - microservices-db-dev
+    env_file:
+      - .env
+
+  nginx: 
+    image: nginx:alpine
+    container_name: laravel-nginx
+    ports:
+      - 8090:80
+      - 8450:443
+    depends_on:
+      - app
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - ./:/app
+      - ./docker/nginx/:/etc/nginx/conf.d
+    networks:
+      - microservices-db-dev
+
+volumes:
+  app-volumes:
+
+networks:
+  microservices-db-dev:
+    name: microservices_dev_microservices-db-dev
+    external: true
