@@ -1,4 +1,4 @@
-FROM php:8.4-fpm-alpine AS build-stage
+FROM php:8.3-fpm-alpine AS build-stage
 
 # Install system dependencies
 RUN apk update && apk upgrade && \
@@ -46,13 +46,8 @@ RUN chown -R www-data:www-data /app \
     && chmod -R 755 /app/storage \
     && chmod -R 755 /app/bootstrap/cache
 
-# Generate application key and cache
-RUN php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
-
 # Release Stage
-FROM php:8.4-fpm-alpine AS build-release-stage
+FROM php:8.3-fpm-alpine AS build-release-stage
 
 # Install runtime dependencies
 RUN apk add --no-cache \
@@ -64,7 +59,7 @@ RUN apk add --no-cache \
     libjpeg-turbo \
     postgresql-libs
 
-# Install PHP extensions (runtime only)
+# Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
     pdo \
@@ -81,7 +76,6 @@ WORKDIR /app
 
 # Copy built application from build stage
 COPY --from=build-stage /app /app
-COPY --from=build-stage /usr/bin/composer /usr/bin/composer
 
 # Copy environment file
 COPY .env /app/.env
@@ -93,5 +87,4 @@ EXPOSE 8000
 
 USER www-data
 
-# Use Laravel's built-in server for simplicity (or use php-fpm for production)
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
