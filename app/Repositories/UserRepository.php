@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class UserRepository
 {
@@ -55,6 +56,7 @@ class UserRepository
             throw new ModelNotFoundException("User not found: $authUserId");
         }
 
+        Log::debug('User found: ', ['auth_user_id' => $authUserId, 'user_id' => $user->id]);
         return UserDetailDTO::fromModel($user);
     }
 

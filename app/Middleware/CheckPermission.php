@@ -52,6 +52,7 @@ class CheckPermission
             return $next($request);
         }
 
+        // Log::debug('Checking permissions for user: ' . $user->id);
         $fullPermission = "{$groupPermission}.{$permission}.{$resourceTable}";
 
         if (!$user->hasPermission($fullPermission)) {
