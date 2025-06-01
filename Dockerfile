@@ -1,6 +1,6 @@
 FROM php:8.4-fpm-alpine AS build-stage
 
-# Install system dependencies in one layer to reduce build time
+# Install system dependencies
 RUN apk update && apk upgrade && \
     apk add --no-cache \
     bash \
@@ -20,55 +20,50 @@ RUN apk update && apk upgrade && \
     gcc \
     g++ \
     make \
-    pkgconfig \
-    linux-headers
+    pkgconfig
 
-# Install PHP extensions in groups to optimize build and reduce memory usage
-RUN docker-php-ext-install -j$(nproc) \
-    pdo \
-    pdo_mysql \
-    pdo_pgsql \
-    mbstring \
-    exif \
-    pcntl \
-    bcmath \
-    zip
+# Install PHP extensions one by one with error handling
+RUN docker-php-ext-install pdo
+RUN docker-php-ext-install pdo_mysql
+RUN docker-php-ext-install pdo_pgsql
+RUN docker-php-ext-install mbstring
+RUN docker-php-ext-install exif
+RUN docker-php-ext-install pcntl
+RUN docker-php-ext-install bcmath
+RUN docker-php-ext-install zip
 
-# Configure and install GD separately (requires specific configuration)
+# Configure and install GD separately
 RUN docker-php-ext-configure gd \
     --with-freetype \
     --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd
+    && docker-php-ext-install gd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Copy composer files first for better layer caching
+# Copy composer files
 COPY composer.json composer.lock ./
-
-# Install dependencies with increased memory limit for Composer
-ENV COMPOSER_MEMORY_LIMIT=-1
-RUN composer install --no-dev --optimize-autoloader --no-scripts --prefer-dist
+RUN composer install --no-dev --optimize-autoloader --no-scripts
 
 # Copy application code
 COPY . .
 
-# Set proper permissions
-RUN chown -R www-data:www-data /app && \
-    chmod -R 755 /app/storage && \
-    chmod -R 755 /app/bootstrap/cache
+# Set permissions
+RUN chown -R www-data:www-data /app \
+    && chmod -R 755 /app/storage \
+    && chmod -R 755 /app/bootstrap/cache
 
-# Generate Laravel caches with error handling
-RUN php artisan config:cache || echo "Config cache failed, continuing..." && \
-    php artisan route:cache || echo "Route cache failed, continuing..." && \
-    php artisan view:cache || echo "View cache failed, continuing..."
+# Generate application key and cache (with error handling)
+RUN php artisan config:cache || true
+RUN php artisan route:cache || true
+RUN php artisan view:cache || true
 
-# Production Stage
-FROM php:8.4-fmp-alpine AS production
+# Release Stage
+FROM php:8.4-fpm-alpine AS production
 
-# Install only runtime dependencies (no dev packages)
+# Install runtime dependencies
 RUN apk add --no-cache \
     libpng \
     libxml2 \
@@ -79,28 +74,20 @@ RUN apk add --no-cache \
     postgresql-libs \
     mysql-client
 
-# Install PHP extensions for production (same as build stage)
+# Install PHP extensions for runtime
 RUN apk add --no-cache --virtual .build-deps \
+    mysql-dev \
+    postgresql-dev \
     freetype-dev \
     libjpeg-turbo-dev \
     libpng-dev \
-    postgresql-dev \
-    mysql-dev \
     autoconf \
     gcc \
     g++ \
     make \
-    && docker-php-ext-install -j$(nproc) \
-    pdo \
-    pdo_mysql \
-    pdo_pgsql \
-    mbstring \
-    exif \
-    pcntl \
-    bcmath \
-    zip \
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath zip \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd \
+    && docker-php-ext-install gd \
     && apk del .build-deps
 
 WORKDIR /app
@@ -108,20 +95,15 @@ WORKDIR /app
 # Copy built application from build stage
 COPY --from=build-stage /app /app
 
-# Copy environment file if it exists
-COPY .env* /app/
+# Copy environment file
+COPY .env /app/.env
 
-# Set final permissions
+# Set permissions
 RUN chown -R www-data:www-data /app
-
-# Create non-root user for security
-USER www-data
 
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000 || exit 1
+USER www-data
 
 # Use Laravel's built-in server
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
