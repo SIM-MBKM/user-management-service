@@ -1,35 +1,33 @@
 services:
 
-  app: 
-    hostname: app
+  app:
+    build:
+      context: .          # ← Build context = root directory (bukan ./php)
+      dockerfile: ./php/Dockerfile  # ← Path ke Dockerfile
+    image: php:latest
     container_name: user-service
-    build: 
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - ${LARAVEL_PORT:-8000}:8000
-    restart: always
+    hostname: "php"
     volumes:
-      - ./storage:/app/storage
-      - ./bootstrap/cache:/app/bootstrap/cache
+      - .:/var/www/html 
+      - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+    working_dir: /var/www/html
     networks:
       - microservices-db-dev
     env_file:
       - .env
 
-  nginx: 
-    image: nginx:alpine
-    container_name: laravel-nginx
+  nginx_laravel:
+    build: ./nginx
+    image: nginx:latest
+    container_name: nginx_laravel
+    hostname: "nginx"
     ports:
-      - 8090:80
-      - 8450:443
+      - "80:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - app
-    restart: unless-stopped
-    tty: true
-    volumes:
-      - ./:/app
-      - ./docker/nginx/:/etc/nginx/conf.d
     networks:
       - microservices-db-dev
 
@@ -38,5 +36,4 @@ volumes:
 
 networks:
   microservices-db-dev:
-    name: microservices_dev_microservices-db-dev
-    external: true
+    driver: bridge
