@@ -2,6 +2,9 @@
 
 namespace App\DTOs;
 
+use App\Models\User;
+use Illuminate\Support\Facades\Log;
+
 class UserDetailDTO
 {
     public string $id;
@@ -14,7 +17,7 @@ class UserDetailDTO
     public string $role_name;
     public array $permissions = [];
 
-    public static function fromModel($user): self
+    public static function fromModel(User $user): self
     {
         $dto = new self();
         $dto->id = $user->id;
@@ -25,6 +28,8 @@ class UserDetailDTO
         $dto->created_at = $user->created_at->format('Y-m-d H:i:s');
         $dto->updated_at = $user->updated_at->format('Y-m-d H:i:s');
         $dto->role_name = $user->role->name;
+
+        $user->load(['role.permissions', 'directPermissions']);
 
         // If permissions were loaded, add them to the DTO
         if ($user->relationLoaded('role') && $user->role->relationLoaded('permissions')) {
@@ -37,6 +42,9 @@ class UserDetailDTO
                 $directPermissions = $user->directPermissions->pluck('name')->toArray();
             }
 
+            Log::debug('Role Permissions: ', $rolePermissions);
+            Log::debug('Direct Permissions: ', $directPermissions);
+            Log::debug('Merged Permissions: ', array_merge($rolePermissions, $directPermissions));
             // Merge and deduplicate permissions
             $dto->permissions = array_values(array_unique(array_merge($rolePermissions, $directPermissions)));
         }
