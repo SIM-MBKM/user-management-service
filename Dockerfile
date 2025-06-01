@@ -60,11 +60,13 @@ RUN php artisan config:cache || true
 RUN php artisan route:cache || true
 RUN php artisan view:cache || true
 
-# Release Stage
+# Production Stage - Copy extensions from build stage instead of recompiling
 FROM php:8.4-fpm-alpine AS production
 
-# Install runtime dependencies
+# Install runtime dependencies only
 RUN apk add --no-cache \
+    bash \
+    curl \
     libpng \
     libxml2 \
     oniguruma \
@@ -74,23 +76,11 @@ RUN apk add --no-cache \
     postgresql-libs \
     mysql-client
 
-# Install PHP extensions for runtime
-RUN apk add --no-cache --virtual .build-deps \
-    mysql-dev \
-    postgresql-dev \
-    freetype-dev \
-    libjpeg-turbo-dev \
-    libpng-dev \
-    autoconf \
-    gcc \
-    g++ \
-    make \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath zip \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd \
-    && apk del .build-deps
-
 WORKDIR /app
+
+# Copy PHP extensions from build stage
+COPY --from=build-stage /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=build-stage /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 
 # Copy built application from build stage
 COPY --from=build-stage /app /app
