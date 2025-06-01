@@ -1,100 +1,46 @@
-FROM php:8.4-fpm-alpine AS build-stage
+FROM php:8.3.11-fpm
 
-# Install system dependencies
-RUN apk update && apk upgrade && \
-    apk add --no-cache \
-    bash \
-    curl \
-    libpng-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    git \
-    oniguruma-dev \
+# Update package list and install dependencies
+RUN apt-get update && apt-get install -y \
     libzip-dev \
-    freetype-dev \
-    libjpeg-turbo-dev \
-    postgresql-dev \
-    mysql-dev \
-    autoconf \
-    gcc \
-    g++ \
-    make \
-    pkgconfig
-
-# Install PHP extensions one by one with error handling
-RUN docker-php-ext-install pdo
-RUN docker-php-ext-install pdo_mysql
-RUN docker-php-ext-install pdo_pgsql
-RUN docker-php-ext-install mbstring
-RUN docker-php-ext-install exif
-RUN docker-php-ext-install pcntl
-RUN docker-php-ext-install bcmath
-RUN docker-php-ext-install zip
-RUN docker-php-ext-install sockets
-
-# Configure and install GD separately
-RUN docker-php-ext-configure gd \
-    --with-freetype \
-    --with-jpeg \
-    && docker-php-ext-install gd
+    libpng-dev \
+    postgresql-client \
+    libpq-dev \
+    nodejs \
+    npm \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
-WORKDIR /app
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Copy composer files
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+# Install required packages
+RUN docker-php-ext-install pdo pgsql pdo_pgsql gd bcmath zip \
+    && pecl install redis \
+    && docker-php-ext-enable redis
 
-# Copy application code
-COPY . .
+WORKDIR /usr/share/nginx/html/
 
-# Set permissions
-RUN chown -R www-data:www-data /app \
-    && chmod -R 755 /app/storage \
-    && chmod -R 755 /app/bootstrap/cache
+# Copy the codebase
+COPY . ./
 
-# Generate application key and cache (with error handling)
-RUN php artisan config:cache || true
-RUN php artisan route:cache || true
-RUN php artisan view:cache || true
+# Run composer install for production and give permissions
+RUN sed 's_@php artisan package:discover_/bin/true_;' -i composer.json \
+    && composer install --ignore-platform-req=php --no-dev --optimize-autoloader \
+    && composer clear-cache \
+    && php artisan package:discover --ansi \
+    && chmod -R 775 storage \
+    && chown -R www-data:www-data storage \
+    && mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache
 
-# Production Stage - Copy extensions from build stage instead of recompiling
-FROM php:8.4-fpm-alpine AS production
+# Copy entrypoint
+COPY ./scripts/php-fpm-entrypoint /usr/local/bin/php-entrypoint
 
-# Install runtime dependencies only
-RUN apk add --no-cache \
-    bash \
-    curl \
-    libpng \
-    libxml2 \
-    oniguruma \
-    libzip \
-    freetype \
-    libjpeg-turbo \
-    postgresql-libs \
-    mysql-client
+# Give permisisons to everything in bin/
+RUN chmod a+x /usr/local/bin/*
 
-WORKDIR /app
+ENTRYPOINT ["/usr/local/bin/php-entrypoint"]
 
-# Copy PHP extensions from build stage
-COPY --from=build-stage /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
-COPY --from=build-stage /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
-
-# Copy built application from build stage
-COPY --from=build-stage /app /app
-
-# Copy environment file
-COPY .env /app/.env
-
-# Set permissions
-RUN chown -R www-data:www-data /app
-
-EXPOSE 8000
-
-USER www-data
-
-# Use Laravel's built-in server
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["php-fpm"]
