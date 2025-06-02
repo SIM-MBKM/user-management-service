@@ -35,5 +35,6 @@ volumes:
   app-volumes:
 
 networks:
-  microservices-db-dev:
-    driver: bridge
+  microservices-db-dev:  # Simplified network definition
+    name: microservices_dev_microservices-db-dev
+    external: true
