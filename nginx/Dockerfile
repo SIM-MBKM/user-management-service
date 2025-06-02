@@ -7,6 +7,6 @@ RUN apk add --no-cache bash
 RUN apk add --no-cache tzdata
 
 # Copy nginx config
-COPY default.conf /etc/nginx/conf.d/default.conf
+# COPY default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
