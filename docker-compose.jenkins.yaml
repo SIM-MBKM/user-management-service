@@ -1,0 +1,39 @@
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./php/jenkins.Dockerfile  # Path ke Dockerfile khusus untuk Jenkins
+    image: php:latest
+    container_name: user-service
+    hostname: "php"
+    volumes:
+      - .:/var/www/html
+      # ❌ HAPUS: Config file mounting (sudah di-copy via Dockerfile)
+      # - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+    working_dir: /var/www/html
+    networks:
+      - microservices-db-dev
+    env_file:
+      - .env
+
+  nginx_laravel:
+    build:
+      context: ./nginx
+      dockerfile: jenkins.Dockerfile
+    container_name: nginx_laravel
+    hostname: "nginx"
+    ports:
+      - "80:80"
+    volumes:
+      - .:/var/www/html
+      # ❌ HAPUS: Config file mounting (sudah di-copy via Dockerfile)
+      # - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - microservices-db-dev
+
+networks:
+  microservices-db-dev:
+    driver: bridge
