@@ -326,6 +326,14 @@ pipeline {
                         
                         echo "✅ Generated .env file"
                         sed 's/=.*/=***/' .env
+
+                                                # Verify .env file exists and has content
+                        if [ -s ".env" ]; then
+                            echo "✅ .env file created successfully ($(wc -l < .env) lines)"
+                        else
+                            echo "❌ .env file is empty or missing"
+                            exit 1
+                        fi
                     '''
                 }
             }

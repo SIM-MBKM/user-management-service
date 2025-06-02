@@ -71,6 +71,8 @@ COPY .gitattributes ./
 COPY .gitignore ./
 COPY .prettierrc ./
 
+COPY .env ./
+
 # Create Laravel directories if they don't exist
 RUN mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache
 

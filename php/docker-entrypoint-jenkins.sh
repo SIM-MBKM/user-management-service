@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Destination of env file inside container
-ENV_FILE="/var/www/html/.env"  # ✅ FIXED: Consistent path
+ENV_FILE="/var/www/html/.env"
 
 #####################################
 # Laravel Application Setup
@@ -9,10 +9,18 @@ ENV_FILE="/var/www/html/.env"  # ✅ FIXED: Consistent path
 
 echo "Starting Laravel application setup..."
 
-# Copy .env.example to .env if .env doesn't exist
-if [ ! -f "/var/www/html/.env" ] && [ -f "/var/www/html/.env.example" ]; then
-    echo "Creating .env file from .env.example..."
-    cp /var/www/html/.env.example /var/www/html/.env
+# ✅ FIXED: Only copy .env.example if .env doesn't exist AND has no content
+if [ ! -f "/var/www/html/.env" ] || [ ! -s "/var/www/html/.env" ]; then
+    if [ -f "/var/www/html/.env.example" ]; then
+        echo "Creating .env file from .env.example..."
+        cp /var/www/html/.env.example /var/www/html/.env
+    fi
+else
+    echo "✅ Using existing .env file (from Jenkins GCP secret)"
+    echo "Environment configuration detected:"
+    echo "APP_NAME: $(grep '^APP_NAME=' /var/www/html/.env | cut -d '=' -f 2 | head -1)"
+    echo "APP_ENV: $(grep '^APP_ENV=' /var/www/html/.env | cut -d '=' -f 2 | head -1)"
+    echo "DB_CONNECTION: $(grep '^DB_CONNECTION=' /var/www/html/.env | cut -d '=' -f 2 | head -1)"
 fi
 
 # Install/Update composer dependencies if needed
@@ -181,7 +189,7 @@ echo "Laravel Version: $(cd /var/www/html && php artisan --version 2>/dev/null |
 echo "Environment: ${APP_ENV:-local}"
 echo "Debug Mode: ${APP_DEBUG:-false}"
 echo "PHP-FPM Status: Starting..."
-echo "Access URL: http://localhost:8080"
+echo "Access URL: http://localhost:8440"
 echo "========================================"
 
 # Health check - Test if Laravel can bootstrap
