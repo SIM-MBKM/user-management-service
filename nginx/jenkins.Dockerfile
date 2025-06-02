@@ -36,9 +36,6 @@ COPY .gitattributes /var/www/html/.gitattributes
 COPY .gitignore /var/www/html/.gitignore
 COPY .prettierrc /var/www/html/.prettierrc
 
-# ✅ COPY .env if exists (for Jenkins environment)
-COPY .env /var/www/html/.env 2>/dev/null || true /
-
 # Set proper permissions
 RUN chown -R nginx:nginx /var/www/html && \
     chmod -R 755 /var/www/html
