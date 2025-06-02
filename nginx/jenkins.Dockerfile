@@ -5,27 +5,39 @@ ENV PS1="\u@\h:\w\\$ "
 
 RUN apk add --no-cache bash tzdata
 
-# Copy nginx configuration
-COPY default.conf /etc/nginx/conf.d/default.conf
+# ✅ Copy nginx configuration
+COPY ./nginx/default.conf /etc/nginx/conf.d/default.conf
 
-# ✅ JENKINS: Copy project and handle src structure
-COPY . /tmp/project
+# ✅ COPY ALL Laravel directories and files
+COPY app/ /var/www/html/app/
+COPY bootstrap/ /var/www/html/bootstrap/
+COPY config/ /var/www/html/config/
+COPY public/ /var/www/html/public/
+COPY routes/ /var/www/html/routes/
+COPY storage/ /var/www/html/storage/
+COPY tests/ /var/www/html/tests/
+COPY scripts/ /var/www/html/scripts/
 
-# ✅ Move Laravel files from src to /var/www/html
-RUN mkdir -p /var/www/html && \
-    if [ -d "/tmp/project/src" ]; then \
-        echo "Moving Laravel from src/ to /var/www/html..."; \
-        cp -r /tmp/project/src/* /var/www/html/ 2>/dev/null || true; \
-        cp -r /tmp/project/src/.* /var/www/html/ 2>/dev/null || true; \
-        echo "Laravel files moved successfully"; \
-    else \
-        echo "No src directory found, copying project directly..."; \
-        cp -r /tmp/project/* /var/www/html/ 2>/dev/null || true; \
-        cp -r /tmp/project/.* /var/www/html/ 2>/dev/null || true; \
-    fi
+# ✅ COPY root files
+COPY artisan /var/www/html/artisan
+COPY composer.json /var/www/html/composer.json
+COPY composer.lock /var/www/html/composer.lock
+COPY .env.example /var/www/html/.env.example
+COPY phpunit.xml /var/www/html/phpunit.xml
+COPY vite.config.js /var/www/html/vite.config.js
+COPY package.json /var/www/html/package.json
+COPY package-lock.json /var/www/html/package-lock.json
+COPY README.md /var/www/html/README.md
+COPY test_consumer.php /var/www/html/test_consumer.php
 
-# Clean up
-RUN rm -rf /tmp/project
+# ✅ COPY config files
+COPY .editorconfig /var/www/html/.editorconfig
+COPY .gitattributes /var/www/html/.gitattributes
+COPY .gitignore /var/www/html/.gitignore
+COPY .prettierrc /var/www/html/.prettierrc
+
+# ✅ COPY .env if exists (for Jenkins environment)
+COPY .env /var/www/html/.env 2>/dev/null || true /
 
 # Set proper permissions
 RUN chown -R nginx:nginx /var/www/html && \

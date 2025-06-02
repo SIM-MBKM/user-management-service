@@ -45,23 +45,31 @@ RUN rm -r /var/lib/apt/lists/*
 
 WORKDIR /var/www/html
 
-# ✅ JENKINS: Copy entire project first, then move Laravel from src to root
-COPY . /tmp/project
+# ✅ COPY ALL Laravel directories (with trailing slash for directories)
+COPY app/ ./app/
+COPY bootstrap/ ./bootstrap/
+COPY config/ ./config/
+COPY public/ ./public/
+COPY routes/ ./routes/
+COPY storage/ ./storage/
+COPY tests/ ./tests/
+COPY scripts/ ./scripts/
 
-# ✅ Move Laravel files from src to /var/www/html
-RUN if [ -d "/tmp/project/src" ]; then \
-        echo "Moving Laravel from src/ to root..."; \
-        cp -r /tmp/project/src/* /var/www/html/ 2>/dev/null || true; \
-        cp -r /tmp/project/src/.* /var/www/html/ 2>/dev/null || true; \
-        echo "Laravel files moved successfully"; \
-    else \
-        echo "No src directory found, copying project directly..."; \
-        cp -r /tmp/project/* /var/www/html/ 2>/dev/null || true; \
-        cp -r /tmp/project/.* /var/www/html/ 2>/dev/null || true; \
-    fi
-
-# Clean up
-RUN rm -rf /tmp/project
+# ✅ COPY individual files one by one (correct syntax)
+COPY artisan ./
+COPY composer.json ./
+COPY composer.lock ./
+COPY .env.example ./
+COPY phpunit.xml ./
+COPY vite.config.js ./
+COPY package.json ./
+COPY package-lock.json ./
+COPY README.md ./
+COPY test_consumer.php ./
+COPY .editorconfig ./
+COPY .gitattributes ./
+COPY .gitignore ./
+COPY .prettierrc ./
 
 # Create Laravel directories if they don't exist
 RUN mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache
@@ -72,11 +80,9 @@ RUN chown -R www-data:www-data /var/www/html && \
     chmod -R 755 /var/www/html/bootstrap/cache
 
 # Copy and setup entrypoint
-# ✅ FIXED: Copy the correct entrypoint script
 COPY ./php/docker-entrypoint-jenkins.sh /usr/local/bin/docker-entrypoint-jenkins.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint-jenkins.sh
 
-# ✅ FIXED: Use the correct entrypoint name
 ENTRYPOINT ["docker-entrypoint-jenkins.sh"]
 EXPOSE 9000
 CMD ["php-fpm"]
