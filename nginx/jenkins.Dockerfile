@@ -6,7 +6,7 @@ ENV PS1="\u@\h:\w\\$ "
 RUN apk add --no-cache bash tzdata
 
 # Copy nginx configuration
-COPY ./nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY default.conf /etc/nginx/conf.d/default.conf
 
 # ✅ JENKINS: Copy project and handle src structure
 COPY . /tmp/project

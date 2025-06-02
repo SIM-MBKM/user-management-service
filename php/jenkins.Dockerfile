@@ -72,9 +72,11 @@ RUN chown -R www-data:www-data /var/www/html && \
     chmod -R 755 /var/www/html/bootstrap/cache
 
 # Copy and setup entrypoint
-COPY ./php/docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# ✅ FIXED: Copy the correct entrypoint script
+COPY ./php/docker-entrypoint-jenkins.sh /usr/local/bin/docker-entrypoint-jenkins.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint-jenkins.sh
 
+# ✅ FIXED: Use the correct entrypoint name
 ENTRYPOINT ["docker-entrypoint-jenkins.sh"]
 EXPOSE 9000
 CMD ["php-fpm"]
