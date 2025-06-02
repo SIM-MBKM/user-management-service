@@ -566,7 +566,7 @@ pipeline {
                         echo "🚀 Building with file copying approach..."
                         
                         COMPOSE_FILE="docker-compose.jenkins.yml"
-                        DOCKER_COMPOSE_CMD="docker-compose -f $COMPOSE_FILE"
+                        DOCKER_COMPOSE_CMD="docker compose -f $COMPOSE_FILE"
                         
                         # Build and deploy
                         $DOCKER_COMPOSE_CMD down --remove-orphans || true
