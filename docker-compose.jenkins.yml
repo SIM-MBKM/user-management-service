@@ -2,7 +2,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: ./php/Dockerfile
+      dockerfile: ./php/jenkins.Dockerfile
     image: php:latest
     container_name: user-service
     hostname: "php"
@@ -16,7 +16,9 @@ services:
       - APP_DEBUG=false
 
   nginx_laravel:
-    build: ./nginx
+    build:
+      context: ./nginx
+      dockerfile: jenkins.Dockerfile
     image: nginx:latest
     container_name: nginx_laravel
     hostname: "nginx"
