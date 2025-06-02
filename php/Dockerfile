@@ -105,6 +105,7 @@ RUN chmod 0644 /etc/cron.d/laravel-scheduler
 #
 
 ADD ./php/local.ini /usr/local/etc/php/conf.d
+COPY ./php/www.conf /usr/local/etc/php-fpm.d/www.conf 
 
 #####################################
 # Aliases:

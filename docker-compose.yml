@@ -9,7 +9,7 @@ services:
     hostname: "php"
     volumes:
       - .:/var/www/html 
-      - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+      # - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf
     working_dir: /var/www/html
     networks:
       - microservices-db-dev
