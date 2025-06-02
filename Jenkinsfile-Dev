@@ -548,7 +548,7 @@ pipeline {
             steps {
                 script {
                     sh '''#!/bin/bash
-                        echo "🚀 Starting Docker Compose deployment..."
+                        echo "🚀 Starting Docker Compose deployment with Jenkins config..."
 
                         echo "🧹 Cleaning up existing containers..."
                         docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
@@ -566,6 +566,16 @@ pipeline {
                             exit 1
                         fi
                         
+                        # Check docker-compose.jenkins.yml file
+                        if [ ! -f docker-compose.jenkins.yml ]; then
+                            echo "❌ ERROR: docker-compose.jenkins.yml file not found"
+                            echo "Available files:"
+                            ls -la docker-compose*.yml || true
+                            exit 1
+                        fi
+                        
+                        echo "✅ Found docker-compose.jenkins.yml file"
+                        
                         # Check .env file
                         if [ ! -f .env ]; then
                             echo "❌ ERROR: .env file not found"
@@ -575,17 +585,26 @@ pipeline {
                         echo "✅ Found .env file"
                         sed 's/=.*/=***/' .env
                         
-                        # Deploy
+                        # Deploy with Jenkins compose file
                         echo "🛑 Stopping containers..."
-                        $DOCKER_COMPOSE_CMD down --remove-orphans || true
+                        $DOCKER_COMPOSE_CMD -f docker-compose.jenkins.yml down --remove-orphans || true
                         
                         echo "🔨 Building images..."
-                        $DOCKER_COMPOSE_CMD build --no-cache
+                        $DOCKER_COMPOSE_CMD -f docker-compose.jenkins.yml build --no-cache
                         
                         echo "🚀 Starting services..."
-                        $DOCKER_COMPOSE_CMD up -d
+                        $DOCKER_COMPOSE_CMD -f docker-compose.jenkins.yml up -d
                         
-                        echo "✅ Deployment completed"
+                        echo "⏳ Waiting for containers to be ready..."
+                        sleep 30
+                        
+                        echo "🔍 Checking container status..."
+                        $DOCKER_COMPOSE_CMD -f docker-compose.jenkins.yml ps
+                        
+                        echo "📋 Container logs (last 20 lines):"
+                        docker logs user-service --tail 20 2>/dev/null || echo "No logs available for user-service"
+                        
+                        echo "✅ Deployment completed successfully"
                     '''
                 }
             }
