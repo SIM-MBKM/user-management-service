@@ -6,6 +6,7 @@ ENV PS1="\u@\h:\w\\$ "
 RUN apk add --no-cache bash
 RUN apk add --no-cache tzdata
 
-COPY default.conf /etc/nginx/conf.d/default.conf  
+# Copy nginx config
+COPY default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
