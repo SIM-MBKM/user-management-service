@@ -550,53 +550,43 @@ pipeline {
                     sh '''#!/bin/bash
                         set -e
                         
-                        echo "🚀 Starting Docker Compose deployment..."
+                        echo "🔍 Pre-build Laravel structure check..."
+                        echo "Current directory: $(pwd)"
+                        ls -la
                         
-                        # Export current directory for docker-compose
-                        export PWD=$(pwd)
-                        echo "📁 Working directory: $PWD"
+                        if [ -d "src" ]; then
+                            echo "✅ Found src/ directory"
+                            ls -la src/ | head -10
+                            ls -la src/composer.json src/artisan 2>/dev/null || echo "Laravel files check in src/"
+                        else
+                            echo "❌ No src/ directory found"
+                            ls -la composer.json artisan 2>/dev/null || echo "Laravel files check in root"
+                        fi
+                        
+                        echo "🚀 Building with file copying approach..."
                         
                         COMPOSE_FILE="docker-compose.jenkins.yml"
+                        DOCKER_COMPOSE_CMD="docker-compose -f $COMPOSE_FILE"
                         
-                        # Validate project structure
-                        echo "🔍 Validating Laravel project..."
-                        if [ ! -f "composer.json" ] || [ ! -f "artisan" ]; then
-                            echo "❌ Laravel project files missing in $(pwd)"
-                            echo "Directory contents:"
-                            ls -la
-                            exit 1
-                        fi
-                        
-                        echo "✅ Laravel project validated"
-                        
-                        # Detect docker compose command
-                        if command -v docker-compose >/dev/null 2>&1; then
-                            DOCKER_COMPOSE_CMD="docker-compose -f $COMPOSE_FILE"
-                        elif docker compose version >/dev/null 2>&1; then
-                            DOCKER_COMPOSE_CMD="docker compose -f $COMPOSE_FILE"
-                        else
-                            echo "❌ ERROR: No docker compose found"
-                            exit 1
-                        fi
-                        
-                        # Deploy
-                        echo "🛑 Stopping containers..."
+                        # Build and deploy
                         $DOCKER_COMPOSE_CMD down --remove-orphans || true
+                        $DOCKER_COMPOSE_CMD build --no-cache
+                        $DOCKER_COMPOSE_CMD up -d
                         
-                        echo "🔨 Building and starting services..."
-                        $DOCKER_COMPOSE_CMD up -d --build --force-recreate
-                        
-                        echo "⏳ Waiting for containers..."
+                        # Health check
                         sleep 30
                         
-                        echo "🔍 Container status:"
-                        $DOCKER_COMPOSE_CMD ps
-                        
-                        echo "🐳 Checking container contents:"
+                        echo "🔍 Post-build container structure check:"
                         docker exec user-service ls -la /var/www/html | head -10
                         
+                        echo "🔍 Laravel files verification:"
+                        docker exec user-service ls -la /var/www/html/composer.json /var/www/html/artisan 2>/dev/null || echo "Laravel files missing"
+                        
+                        echo "🔍 Vendor directory check:"
+                        docker exec user-service ls -la /var/www/html/vendor/ 2>/dev/null || echo "Vendor directory missing - will be created by entrypoint"
+                        
                         echo "📋 Application logs:"
-                        docker logs user-service --tail 20
+                        docker logs user-service --tail 30
                         
                         echo "✅ Deployment completed"
                     '''

@@ -45,10 +45,25 @@ RUN rm -r /var/lib/apt/lists/*
 
 WORKDIR /var/www/html
 
-# ✅ JENKINS: Copy Laravel application files
-COPY . .
+# ✅ JENKINS: Copy entire project first, then move Laravel from src to root
+COPY . /tmp/project
 
-# Create Laravel directories
+# ✅ Move Laravel files from src to /var/www/html
+RUN if [ -d "/tmp/project/src" ]; then \
+        echo "Moving Laravel from src/ to root..."; \
+        cp -r /tmp/project/src/* /var/www/html/ 2>/dev/null || true; \
+        cp -r /tmp/project/src/.* /var/www/html/ 2>/dev/null || true; \
+        echo "Laravel files moved successfully"; \
+    else \
+        echo "No src directory found, copying project directly..."; \
+        cp -r /tmp/project/* /var/www/html/ 2>/dev/null || true; \
+        cp -r /tmp/project/.* /var/www/html/ 2>/dev/null || true; \
+    fi
+
+# Clean up
+RUN rm -rf /tmp/project
+
+# Create Laravel directories if they don't exist
 RUN mkdir -p storage/logs storage/framework/{cache,sessions,views} bootstrap/cache
 
 # Set proper permissions
@@ -60,6 +75,6 @@ RUN chown -R www-data:www-data /var/www/html && \
 COPY ./php/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint-jenkins.sh"]
 EXPOSE 9000
 CMD ["php-fpm"]
