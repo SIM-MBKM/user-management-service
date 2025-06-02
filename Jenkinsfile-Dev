@@ -548,63 +548,57 @@ pipeline {
             steps {
                 script {
                     sh '''#!/bin/bash
-                        echo "🚀 Starting Docker Compose deployment with Jenkins config..."
-
-                        echo "🧹 Cleaning up existing containers..."
-                        docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
-                        docker rm -f "$CONTAINER_NAME-app" 2>/dev/null || true
+                        set -e
                         
-                        # Detect docker compose command inline
+                        echo "🚀 Starting Docker Compose deployment..."
+                        
+                        # Export current directory for docker-compose
+                        export PWD=$(pwd)
+                        echo "📁 Working directory: $PWD"
+                        
+                        COMPOSE_FILE="docker-compose.jenkins.yml"
+                        
+                        # Validate project structure
+                        echo "🔍 Validating Laravel project..."
+                        if [ ! -f "composer.json" ] || [ ! -f "artisan" ]; then
+                            echo "❌ Laravel project files missing in $(pwd)"
+                            echo "Directory contents:"
+                            ls -la
+                            exit 1
+                        fi
+                        
+                        echo "✅ Laravel project validated"
+                        
+                        # Detect docker compose command
                         if command -v docker-compose >/dev/null 2>&1; then
-                            DOCKER_COMPOSE_CMD="docker-compose"
-                            echo "✅ Using docker-compose"
+                            DOCKER_COMPOSE_CMD="docker-compose -f $COMPOSE_FILE"
                         elif docker compose version >/dev/null 2>&1; then
-                            DOCKER_COMPOSE_CMD="docker compose"
-                            echo "✅ Using docker compose"
+                            DOCKER_COMPOSE_CMD="docker compose -f $COMPOSE_FILE"
                         else
                             echo "❌ ERROR: No docker compose found"
                             exit 1
                         fi
                         
-                        # Check docker-compose.jenkins.yml file
-                        if [ ! -f docker-compose.jenkins.yml ]; then
-                            echo "❌ ERROR: docker-compose.jenkins.yml file not found"
-                            echo "Available files:"
-                            ls -la docker-compose*.yml || true
-                            exit 1
-                        fi
-                        
-                        echo "✅ Found docker-compose.jenkins.yml file"
-                        
-                        # Check .env file
-                        if [ ! -f .env ]; then
-                            echo "❌ ERROR: .env file not found"
-                            exit 1
-                        fi
-                        
-                        echo "✅ Found .env file"
-                        sed 's/=.*/=***/' .env
-                        
-                        # Deploy with Jenkins compose file
+                        # Deploy
                         echo "🛑 Stopping containers..."
-                        $DOCKER_COMPOSE_CMD -f docker-compose.jenkins.yml down --remove-orphans || true
+                        $DOCKER_COMPOSE_CMD down --remove-orphans || true
                         
-                        echo "🔨 Building images..."
-                        $DOCKER_COMPOSE_CMD -f docker-compose.jenkins.yml build --no-cache
+                        echo "🔨 Building and starting services..."
+                        $DOCKER_COMPOSE_CMD up -d --build --force-recreate
                         
-                        echo "🚀 Starting services..."
-                        $DOCKER_COMPOSE_CMD -f docker-compose.jenkins.yml up -d
-                        
-                        echo "⏳ Waiting for containers to be ready..."
+                        echo "⏳ Waiting for containers..."
                         sleep 30
                         
-                        echo "🔍 Checking container status..."
-                        $DOCKER_COMPOSE_CMD -f docker-compose.jenkins.yml ps
+                        echo "🔍 Container status:"
+                        $DOCKER_COMPOSE_CMD ps
                         
-                        echo "📋 Container logs (last 20 lines):"
-                        docker logs user-service --tail 20 2>/dev/null || echo "No logs available for user-service"
+                        echo "🐳 Checking container contents:"
+                        docker exec user-service ls -la /var/www/html | head -10
                         
-                        echo "✅ Deployment completed successfully"
+                        echo "📋 Application logs:"
+                        docker logs user-service --tail 20
+                        
+                        echo "✅ Deployment completed"
                     '''
                 }
             }
