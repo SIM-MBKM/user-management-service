@@ -189,7 +189,7 @@ echo "Laravel Version: $(cd /var/www/html && php artisan --version 2>/dev/null |
 echo "Environment: ${APP_ENV:-local}"
 echo "Debug Mode: ${APP_DEBUG:-false}"
 echo "PHP-FPM Status: Starting..."
-echo "Access URL: http://localhost:8440"
+echo "Access URL: http://localhost:8089"
 echo "========================================"
 
 # Health check - Test if Laravel can bootstrap

@@ -20,10 +20,10 @@ services:
       context: .  # ← Root directory (consistent)
       dockerfile: ./nginx/jenkins.Dockerfile
     image: nginx:latest
-    container_name: nginx_laravel
+    container_name: nginx-user-service
     hostname: "nginx"
     ports:
-      - "8440:80"
+      - "8089:80"
     # volumes:
     #   - ${PWD:-$(pwd)}:/var/www/html  # ✅ Use absolute path
     depends_on:
