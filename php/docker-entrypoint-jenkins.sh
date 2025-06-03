@@ -103,10 +103,10 @@ if [ -f "/var/www/html/.env" ] && grep -q "DB_CONNECTION=" /var/www/html/.env; t
     timeout 10s php artisan migrate:status 2>/dev/null && echo "✅ Database connection: SUCCESS" || echo "⚠️  Database connection: FAILED (continuing anyway)"
     
     # Auto migrate in development if DB is available
-    if [ "$APP_ENV" = "local" ] && timeout 5s php artisan migrate:status >/dev/null 2>&1; then
-        echo "Running database migrations (development mode)..."
-        php artisan migrate --force --no-interaction 2>/dev/null || echo "⚠️  Migration failed (continuing anyway)"
-    fi
+    # if [ "$APP_ENV" = "local" ] && timeout 5s php artisan migrate:status >/dev/null 2>&1; then
+    #     echo "Running database migrations (development mode)..."
+    #     php artisan migrate --force --no-interaction 2>/dev/null || echo "⚠️  Migration failed (continuing anyway)"
+    # fi
 else
     echo "No database configuration found."
 fi
