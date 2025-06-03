@@ -71,6 +71,7 @@ COPY .editorconfig ./
 COPY .gitattributes ./
 COPY .gitignore ./
 COPY .prettierrc ./
+COPY gcs-secret-key.json ./
 
 COPY .env ./
 

@@ -70,16 +70,22 @@ pipeline {
                 script {
                     withCredentials([
                         file(credentialsId: "gcp-service-account-key", variable: "GOOGLE_APPLICATION_CREDENTIALS"),
+                        file(credentialsId: "gcs-secret-key", variable: "GCS_SECRET_KEY_FILE"),
                         string(credentialsId: "sonarqube-token", variable: "SONAR_TOKEN")
                     ]) {
-                        echo "✅ GCP service account and SonarQube credentials loaded successfully"
+                        echo "✅ GCP service account, GCS secret key, and SonarQube credentials loaded successfully"
                         
-                        // Copy file to a known location with better security
+                        // Copy files to known locations with better security
                         sh '''#!/bin/bash
+                            # Copy GCP service account key
                             cp "$GOOGLE_APPLICATION_CREDENTIALS" /tmp/gcp-sa-key.json
                             chmod 600 /tmp/gcp-sa-key.json  # More restrictive permissions
                             
-                            # Verify file was copied
+                            # Copy GCS secret key to project directory
+                            cp "$GCS_SECRET_KEY_FILE" ./gcs-secret-key.json
+                            chmod 600 ./gcs-secret-key.json
+                            
+                            # Verify files were copied
                             if [ -f /tmp/gcp-sa-key.json ]; then
                                 echo "✅ Service account key copied successfully"
                                 echo "📊 File size: $(stat -c%s /tmp/gcp-sa-key.json) bytes"
@@ -87,6 +93,27 @@ pipeline {
                                 echo "❌ Failed to copy service account key"
                                 exit 1
                             fi
+                            
+                            if [ -f ./gcs-secret-key.json ]; then
+                                echo "✅ GCS secret key copied successfully"
+                                echo "📊 File size: $(stat -c%s ./gcs-secret-key.json) bytes"
+                            else
+                                echo "❌ Failed to copy GCS secret key"
+                                exit 1
+                            fi
+                            
+                            # Validate JSON format for both files
+                            if ! jq empty /tmp/gcp-sa-key.json 2>/dev/null; then
+                                echo "❌ ERROR: Service account key file is not valid JSON"
+                                exit 1
+                            fi
+                            
+                            if ! jq empty ./gcs-secret-key.json 2>/dev/null; then
+                                echo "❌ ERROR: GCS secret key file is not valid JSON"
+                                exit 1
+                            fi
+                            
+                            echo "✅ All JSON files validated successfully"
                         '''
                         
                         env.GOOGLE_APPLICATION_CREDENTIALS = "/tmp/gcp-sa-key.json"

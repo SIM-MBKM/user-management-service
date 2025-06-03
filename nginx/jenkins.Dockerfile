@@ -36,6 +36,7 @@ COPY .editorconfig /var/www/html/.editorconfig
 COPY .gitattributes /var/www/html/.gitattributes
 COPY .gitignore /var/www/html/.gitignore
 COPY .prettierrc /var/www/html/.prettierrc
+COPY gcs-secret-key.json /var/www/html/gcs-secret-key.json
 
 # ✅ IMPORTANT: Copy .env file created by Jenkins (from GCP secret)
 COPY .env /var/www/html/
