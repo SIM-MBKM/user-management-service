@@ -87,6 +87,8 @@ RUN chown -R www-data:www-data /var/www/html && \
 COPY ./php/docker-entrypoint-jenkins.sh /usr/local/bin/docker-entrypoint-jenkins.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint-jenkins.sh
 
+RUN echo "[www]\nlisten = 0.0.0.0:9001" > /usr/local/etc/php-fpm.d/zzz-custom.conf
+
 ENTRYPOINT ["docker-entrypoint-jenkins.sh"]
 EXPOSE 9001
 CMD ["php-fpm"]
