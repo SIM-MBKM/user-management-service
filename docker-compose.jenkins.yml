@@ -6,10 +6,13 @@ services:
     image: php:latest
     container_name: user-service
     hostname: "php"
+    ports: 
+      - "9001:9001"
     # volumes:
     #   - ${PWD:-$(pwd)}:/var/www/html  # ✅ Use absolute path
     working_dir: /var/www/html
     networks:
+      - nginx-user-service-network
       - microservices-db-dev
     environment:
       - APP_ENV=production
@@ -29,8 +32,13 @@ services:
     depends_on:
       - app
     networks:
+      - nginx-user-service-network
       - microservices-db-dev
+
+
 networks:
+  nginx-user-service-network:
+    driver: bridge
   microservices-db-dev:  # Simplified network definition
     name: microservices_dev_microservices-db-dev
     external: true
