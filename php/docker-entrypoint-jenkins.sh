@@ -76,6 +76,7 @@ php artisan cache:clear --no-interaction 2>/dev/null || true
 php artisan view:clear --no-interaction 2>/dev/null || true
 php artisan route:clear --no-interaction 2>/dev/null || true
 
+php artisan consume:user-events --no-interaction 2>/dev/null || true
 # Run Laravel package discovery
 echo "Running Laravel package discovery..."
 php artisan package:discover --no-interaction 2>/dev/null || true
