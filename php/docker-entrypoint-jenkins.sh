@@ -76,7 +76,6 @@ php artisan cache:clear --no-interaction 2>/dev/null || true
 php artisan view:clear --no-interaction 2>/dev/null || true
 php artisan route:clear --no-interaction 2>/dev/null || true
 
-php artisan consume:user-events --no-interaction 2>/dev/null || true
 # Run Laravel package discovery
 echo "Running Laravel package discovery..."
 php artisan package:discover --no-interaction 2>/dev/null || true
@@ -152,6 +151,41 @@ echo "Starting cron service..."
 service cron start
 
 #####################################
+# RabbitMQ Consumer Setup
+#####################################
+
+# Function to start consumer with auto-restart
+start_consumer() {
+    echo "Starting RabbitMQ User Events Consumer..."
+    while true; do
+        cd /var/www/html
+        echo "$(date): Starting consumer process..."
+        php artisan consume:user-events
+        echo "$(date): Consumer process stopped, restarting in 5 seconds..."
+        sleep 5
+    done
+}
+
+# Start consumer in background with logging
+start_consumer > /var/www/html/storage/logs/consumer.log 2>&1 &
+CONSUMER_PID=$!
+echo "RabbitMQ Consumer started with PID: $CONSUMER_PID"
+
+# Create a function to handle graceful shutdown
+cleanup() {
+    echo "Shutting down processes..."
+    if [ ! -z "$CONSUMER_PID" ]; then
+        echo "Stopping RabbitMQ Consumer (PID: $CONSUMER_PID)..."
+        kill -TERM $CONSUMER_PID 2>/dev/null || true
+        wait $CONSUMER_PID 2>/dev/null || true
+    fi
+    exit 0
+}
+
+# Set up signal handlers for graceful shutdown
+trap cleanup SIGTERM SIGINT
+
+#####################################
 # Xdebug Configuration
 #####################################
 
@@ -190,7 +224,9 @@ echo "Laravel Version: $(cd /var/www/html && php artisan --version 2>/dev/null |
 echo "Environment: ${APP_ENV:-local}"
 echo "Debug Mode: ${APP_DEBUG:-false}"
 echo "PHP-FPM Status: Starting..."
+echo "RabbitMQ Consumer: Running (PID: $CONSUMER_PID)"
 echo "Access URL: http://localhost:8089"
+echo "Consumer Logs: /var/www/html/storage/logs/consumer.log"
 echo "========================================"
 
 # Health check - Test if Laravel can bootstrap
