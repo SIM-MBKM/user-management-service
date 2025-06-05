@@ -56,7 +56,7 @@ class UserRepository
             throw new ModelNotFoundException("User not found: $authUserId");
         }
 
-        Log::debug('User found: ', ['auth_user_id' => $authUserId, 'user_id' => $user->id]);
+        // Log::debug('User found: ', ['auth_user_id' => $authUserId, 'user_id' => $user->id]);
         return UserDetailDTO::fromModel($user);
     }
 

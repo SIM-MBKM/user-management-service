@@ -42,9 +42,9 @@ class UserDetailDTO
                 $directPermissions = $user->directPermissions->pluck('name')->toArray();
             }
 
-            Log::debug('Role Permissions: ', $rolePermissions);
-            Log::debug('Direct Permissions: ', $directPermissions);
-            Log::debug('Merged Permissions: ', array_merge($rolePermissions, $directPermissions));
+            // Log::debug('Role Permissions: ', $rolePermissions);
+            // Log::debug('Direct Permissions: ', $directPermissions);
+            // Log::debug('Merged Permissions: ', array_merge($rolePermissions, $directPermissions));
             // Merge and deduplicate permissions
             $dto->permissions = array_values(array_unique(array_merge($rolePermissions, $directPermissions)));
         }
