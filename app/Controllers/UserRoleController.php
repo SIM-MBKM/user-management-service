@@ -118,4 +118,50 @@ class UserRoleController extends BaseController
             return $this->errorResponse('An error occurred while fetching user role: ' . $e->getMessage(), 500);
         }
     }
+
+    public function changeToDosenPembimbing()
+    {
+        try {
+            $userId = Auth::info()->user_id;
+            $roleName = 'DOSEN PEMBIMBING';
+
+            $roleId = $this->userRoleService->getRoleIdByName($roleName);
+            if (empty($roleId)) {
+                return $this->errorResponse('Role not found: ' . $roleName, 404);
+            }
+
+            $result = $this->userRoleService->assignRoleToUser($userId, $roleId);
+
+            if (!$result) {
+                return $this->errorResponse('Failed to change role to Dosen Pembimbing', 400);
+            }
+
+            return $this->successResponse(null, 'Role changed to Dosen Pembimbing successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse('An error occurred while changing role to Dosen Pembimbing: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function changeToDosenPemonev()
+    {
+        try {
+            $userId = Auth::info()->user_id;
+            $roleName = 'DOSEN PEMONEV';
+
+            $roleId = $this->userRoleService->getRoleIdByName($roleName);
+            if (empty($roleId)) {
+                return $this->errorResponse('Role not found: ' . $roleName, 404);
+            }
+
+            $result = $this->userRoleService->assignRoleToUser($userId, $roleId);
+
+            if (!$result) {
+                return $this->errorResponse('Failed to change role to Dosen Pemonev', 400);
+            }
+
+            return $this->successResponse(null, 'Role changed to Dosen Pemonev successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse('An error occurred while changing role to Dosen Pemonev: ' . $e->getMessage(), 500);
+        }
+    }
 }

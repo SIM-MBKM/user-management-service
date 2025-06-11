@@ -179,6 +179,14 @@ Route::middleware([
         ->where('userId', '[0-9a-fA-F\-]{36}');
 });
 
+Route::middleware([
+    'auth',
+    'check.permission:user_management_service,update,roles'
+])->group(function () {
+    Route::put('/v1/user/service/users/me/role/dosen-pembimbing', [UserRoleController::class, 'changeToDosenPembimbing']);
+    Route::put('/v1/user/service/users/me/role/dosen-pemonev', [UserRoleController::class, 'changeToDosenPemonev']);
+});
+
 // Self operations (view own role)
 Route::middleware([
     //done
